@@ -1,0 +1,10 @@
+## testing
+pytest
+pytest-coverage
+
+## tooling
+black
+flake8
+isort
+pip-tools
+bump2version
