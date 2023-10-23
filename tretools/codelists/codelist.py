@@ -201,7 +201,7 @@ class Codelist:
         new_code = f"{code}X"
         new_row = {
             self.code_column: new_code,
-            self.term_column: row[self.term_column]  # the term remains the same
+            self.term_column: row[self.term_column]
         }
 
         return new_row
