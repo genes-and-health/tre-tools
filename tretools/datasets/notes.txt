@@ -1,0 +1,43 @@
+# 1. Load dataset
+# 2. Deduplicate records on nhs number, code and date - add optional arg for days 
+#    Log the data that is being removed in terms of numbers and events. 
+# 3. Time format the date
+# - optional add age and gender
+# 
+# NHS Digital data:-> we need to deal with 1st and 2nd diagnoses
+#
+# 3. Output this as a dedpulicated dataset - csv or pickle
+# 4. Load a codelist object
+# 5. Apply the codelist to the deduplicated dataset and end up with dataset of the
+#    NHS Numbers, Code, Term and Date. We only want first event. 
+# 6. Output the summary data to a file
+# 7. Output the real results to a csv file with and without the nhs numbers
+# 8. Combine with demographics dataset if available to get gender and age 
+# 9. Deduplicate by phenotype (even if it came from ICD or snomed), on earliest date per individual
+
+# GWAS outputs
+# 1. Big files --> GSA id and the broad ID (2 different genomic ids) (all the phenotypes) FID, IID, NHS NUMber, phenotype1, etc
+# 2. For each phenotype, we have an output (NHS number, condition, earliest date)
+
+# Phenotype report
+# 1. Load the codelists index
+# condition_report = {'Dataset': df.name,  # To put in the report file
+#             'Codelist type': codetype,
+#             'Condition': requested_codelists_i.columns[0],
+#             'No. of records' : len(data_codelistReq_1),
+#             'NHS_numbers': data_codelistReq_1.iloc[:,0].values,
+#             'No. of individuals' : data_codelistReq_1.iloc[:,0].nunique(),
+#         'Dates': data_codelistReq_1[datecolname].values}
+
+# class PhenotypeReport:
+#     def __init__(self, mappomg, codelists, datasets) -> None:
+#         pass
+
+#     def load_the_codelists_index():
+#         pass
+
+#     def run_though_datasets_specified():
+#         pass
+
+#     def output_report():
+#         pass
