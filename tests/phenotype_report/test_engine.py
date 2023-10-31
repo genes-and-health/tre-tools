@@ -1,7 +1,6 @@
 import pytest
 import os
 
-from tretools.phenotype_report.report import PhenotypeReport
 from tretools.phenotype_report.engine import PhenotypeReportEngine
 from tretools.phenotype_report.engine import FileNotFoundError
 
