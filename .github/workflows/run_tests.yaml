@@ -1,0 +1,34 @@
+name: Build Workflow
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install Production Dependencies
+        run: pip install -r requirements.prod.txt
+
+      - name: Install Development Dependencies
+        run: pip install -r requirements.dev.txt
+
+      - name: Run PyTest with Coverage
+        run: |
+          echo "Starting tests"
+          pytest tests --cov=tretools --cov-fail-under=95
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Generate Coverage Report
+        run: |
+          pytest tests --cov-report xml --cov=tretools --cov-fail-under=95
+        env:
+          PYTHONPATH: ${{ github.workspace }}

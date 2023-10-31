@@ -1,0 +1,3 @@
+"phenotype_name","dataset_name","dataset_path","dataset_type","codelist_name","codelist_path","codelist_type","with_x_in_icd"
+"Disease A","primary_care","tests/test_data/primary_care/processed_data.csv","primary_care","Disease_A_snomed","tests/codelists/test_data/good_snomed_codelist.csv","SNOMED",""
+"Disease A","barts_health","tests/test_data/barts_health/diagnosis.csv","barts_health","Disease_A_ICD10","FAKE PATH","ICD10","yes"
