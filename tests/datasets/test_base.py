@@ -125,4 +125,7 @@ def test_read_from_feather():
     loaded_data = Dataset(path="tests/test_data/primary_care/processed_data.arrow", dataset_type="primary_care", coding_system="SNOMED")
     assert loaded_data.data.shape == (7, 4)
 
-
+def test_read_from_tab():
+    # read from a tab file
+    loaded_data = Dataset(path="tests/test_data/barts_health/diagnosis.tab", dataset_type="secondary_care", coding_system="ICD10")
+    assert loaded_data.data.shape == (10, 6)

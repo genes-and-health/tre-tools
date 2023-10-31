@@ -206,3 +206,10 @@ def test_processed_log():
     assert "Date format standarised" in ingested_data.log[5]
 
 
+def test_with_barts_health_tab():
+    raw_data = RawDataset(path="tests/test_data/barts_health/diagnosis.tab", dataset_type="secondary_care", coding_system="ICD10")
+    assert "Loaded data from tests/test_data/barts_health/diagnosis.tab" in raw_data.log[0]
+
+    # run the process_dataset method
+    processed_data = raw_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], column_maps={"ICD_Diagnosis_Cd": "code", "ICD_Diag_Desc": "term", "Activity_date": "date", "PseudoNHS_2023_04_24": "nhs_number"})
+    assert processed_data.data.shape == (10, 4)
