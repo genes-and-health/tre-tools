@@ -11,7 +11,7 @@ from tretools.codelists.codelist_types import CodelistType
 from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError
 
 class Codelist:
-    def __init__(self, path: str, codelist_type: CodelistType, code_column: str = "code", term_column: str = "term", add_x_codes: bool = True) -> None:
+    def __init__(self, path: str, codelist_type: CodelistType, code_column: str = "code", term_column: str = "term", add_x_codes: bool = False) -> None:
         self.codelist_type = codelist_type
         self.code_column = code_column
         self.term_column = term_column
@@ -53,6 +53,7 @@ class Codelist:
                     new_row = self._add_X_codes_for_ICD(row)
                     if new_row is not None:
                         data.append(new_row)
+                        self.codes.add(new_row[self.code_column])
         
         return data
 
