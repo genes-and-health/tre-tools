@@ -1,0 +1,46 @@
+name: Build Workflow
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10, 3.11]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Production Dependencies
+        run: pip install -r requirements.prod.txt
+
+      - name: Install Development Dependencies
+        run: pip install -r requirements.dev.txt
+
+      - name: Run PyTest with Coverage
+        run: |
+          echo "Starting tests"
+          pytest tests --cov=tretools --cov-fail-under=95
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Generate Coverage Report
+        run: |
+          pytest tests --cov-report xml --cov=tretools --cov-fail-under=95
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
