@@ -33,12 +33,13 @@ class EventCounter:
             raise MismatchBetweenDatasetAndCodelist(f"Coding system of dataset ({self.dataset.coding_system}) does not match coding system of codelist ({codelist.codelist_type})")
 
         # Get the codes from the codelist
-        codes = codelist.codes
+        codes = list(codelist.codes)
 
         # if snomed, make sure the codes are integers
         if codelist.codelist_type == CodelistType.SNOMED.value:
             codes = [int(code) for code in codelist.codes if code.isdigit()]
-        
+
+
         # Filter the dataset to only include rows where the code is in the codelist
         filtered_data = self.dataset.data.filter(self.dataset.data["code"].is_in(codes))
 
@@ -65,3 +66,6 @@ class EventCounter:
 
         # Add the counts to the counts dictionary
         self.counts[name_of_count] = counts
+
+
+ 

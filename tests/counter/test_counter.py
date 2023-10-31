@@ -57,3 +57,5 @@ def test_count_events_mismatched_coding_system():
         counter.count_events("test_count", codelist)
 
     assert "Coding system of dataset (SNOMED) does not match coding system of codelist (ICD10)" in str(e.value)
+
+
