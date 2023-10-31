@@ -5,12 +5,11 @@ import os
 import polars as pl
 
 from datetime import datetime
-from typing import List, Dict
+
 
 from tretools.codelists.codelist_types import CodelistType
 from tretools.datasets.dataset_enums.dataset_types import DatasetType
-from tretools.datasets.dataset_enums.deduplication_options import DeduplicationOptions
-from tretools.datasets.errors import DatasetPathNotCorrect, WriteOptionsInvalid, UnsupportedFileType, ColumnsValidationError, DeduplicationError
+from tretools.datasets.errors import DatasetPathNotCorrect, WriteOptionsInvalid, UnsupportedFileType
 
 
 class Dataset():
@@ -53,6 +52,9 @@ class Dataset():
         # if feather file, load using polars
         elif path.endswith(".arrow"):
             return pl.read_ipc(path)
+        # if tab file, load using polars
+        elif path.endswith(".tab"):
+            return pl.read_csv(path, separator="\t")
         else:
             raise UnsupportedFileType("File type not supported. Must be either .csv or .arrow")
 

@@ -84,7 +84,8 @@ class RawDataset(Dataset):
             pl.col(date_col).str.strptime(pl.Date, "%d-%m-%Y %H:%M", strict=False),      # "03-06-2013 15:23"
             pl.col(date_col).str.strptime(pl.Date, "%d-%m-%Y %H:%M:%S", strict=False),   # "19/10/2015 17:25:00"
             pl.col(date_col).str.strptime(pl.Date, "%B %d, %Y", strict=False),           # "July 19, 2016"
-            pl.col(date_col).str.strptime(pl.Date, "%Y-%m-%d %H:%M", strict=False)       # "2016-08-20 07:10"
+            pl.col(date_col).str.strptime(pl.Date, "%Y-%m-%d %H:%M", strict=False),       # "2016-08-20 07:10"
+            pl.col(date_col).str.strptime(pl.Date, "%d/%m/%Y %H:%M", strict=False)       # "01/01/2009 15:09"
             ).alias(date_col)
         )
         # Drop the original date column and concatenate the converted one
