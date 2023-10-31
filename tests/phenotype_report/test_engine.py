@@ -6,7 +6,7 @@ from tretools.phenotype_report.engine import FileNotFoundError
 
 
 TEST_INSTRUCTION_PRIMARY_CARE = {'phenotype_name': 'Disease A', 'dataset_name': 'primary_care', 'dataset_path': 'tests/test_data/primary_care/processed_data.csv', 'dataset_type': 'primary_care', 'codelist_name': 'Disease_A_snomed', 'codelist_path': 'tests/codelists/test_data/good_snomed_codelist.csv', 'codelist_type': 'SNOMED', 'with_x_in_icd': ''}
-TEST_INSTRUCTION_SECONDARY_CARE = {'phenotype_name': 'Disease A', 'dataset_name': 'barts_health', 'dataset_path': 'tests/test_data/barts_health/diagnosis.csv', 'dataset_type': 'barts_health', 'codelist_name': 'Disease_A_ICD10', 'codelist_path': 'tests/codelists/test_data/good_icd_codelist.csv', 'codelist_type': 'ICD10', 'with_x_in_icd': 'yes'}
+TEST_INSTRUCTION_SECONDARY_CARE = {'phenotype_name': 'Disease A', 'dataset_name': 'barts_health', 'dataset_path': 'tests/test_data/barts_health/diagnosis.csv', 'dataset_type': 'barts_health', 'codelist_name': 'Disease_A_ICD10', 'codelist_path': 'tests/codelists/test_data/good_icd_codelist.csv', 'codelist_type': 'ICD10', 'with_x_in_icd': 'no'}
 
 def test_create_engine():
     engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
