@@ -32,11 +32,3 @@ jobs:
           pytest tests --cov-report xml --cov=tretools --cov-fail-under=95
         env:
           PYTHONPATH: ${{ github.workspace }}
-
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          fail_ci_if_error: true
-          verbose: true
