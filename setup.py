@@ -15,5 +15,5 @@ setup(
     author="Caroline Morton",
     author_email="c.morton@qmul.ac.uk",
     python_requires=">=3.8",
-    install_requires=["pandas"],
+    install_requires=["polars"],
 )
