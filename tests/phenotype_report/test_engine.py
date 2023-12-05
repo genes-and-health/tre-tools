@@ -50,7 +50,7 @@ def test__generate_phenotype_report():
     engine.organise_into_phenotypes()
 
     phenotype_report = engine._generate_phenotype_report(engine.processed_instructions['Disease A'], "Disease A", overlaps=False)
-    assert engine.datasets['primary_care'].data.shape == (7, 4)
+    assert engine.datasets['primary_care'].data.shape == (7, 3)
     assert engine.datasets['barts_health'].data.shape == (10, 4)
     
     assert phenotype_report.counts['primary_care_Disease_A_snomed']['patient_count'] == 2
@@ -66,7 +66,7 @@ def test__generate_phenotype_report_with_overlaps():
     engine.organise_into_phenotypes()
 
     phenotype_report = engine._generate_phenotype_report(engine.processed_instructions['Disease A'], "Disease A", overlaps=True)
-    assert engine.datasets['primary_care'].data.shape == (7, 4)
+    assert engine.datasets['primary_care'].data.shape == (7, 3)
     assert engine.datasets['barts_health'].data.shape == (10, 4)
 
     expected_keys = ["primary_care_Disease_A_snomed_only", "barts_health_Disease_A_ICD10_only", "primary_care_Disease_A_snomed_and_barts_health_Disease_A_ICD10", "all_datasets"]

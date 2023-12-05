@@ -1,0 +1,7 @@
+{
+    "nhs_number": "STUDY_ID",
+    "date": "ADMIDATE",
+    "column_to_expand": [
+        "DIAG_01", "DIAG_02", "DIAG_03", "DIAG_04", "DIAG_05", "DIAG_06", "DIAG_07", "DIAG_08", "DIAG_09", "DIAG_10", "DIAG_11", "DIAG_12", "DIAG_13", "DIAG_14", "DIAG_15", "DIAG_16", "DIAG_17", "DIAG_18", "DIAG_19", "DIAG_20"
+    ]
+}

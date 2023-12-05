@@ -1,5 +1,6 @@
 import pytest
 import datetime
+import polars as pl
 
 from tretools.datasets.raw_dataset import RawDataset
 from tretools.datasets.errors import ColumnsValidationError, DeduplicationError
@@ -34,7 +35,7 @@ def test_check_col_validation_second_time():
     observed_dataset = RawDataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system="SNOMED")
 
     with pytest.raises(ColumnsValidationError) as e:
-        observed_dataset._standarise_column_names({"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+        observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
 
     assert "Column names have already been validated" in str(e.value)
 
@@ -44,20 +45,20 @@ def test__standarise_column_names():
     assert observed_dataset.column_validation == False
 
     # Standarise the column names
-    observed_dataset._standarise_column_names({"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+    observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
     assert observed_dataset.column_validation == True
 
     # Check the column names are correct
-    assert observed_dataset.data.columns == ["nhs_number", "date", "code", "term"]
+    assert observed_dataset.data.columns == ["nhs_number", "date", "code"]
 
 
 def test__standarised_column_names_with_missing_columns():
     observed_dataset = RawDataset(path="tests/test_data/primary_care/procedures_missing_cols.csv", dataset_type="primary_care", coding_system="SNOMED")
 
     with pytest.raises(ColumnsValidationError) as e:
-        observed_dataset._standarise_column_names({"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+        observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
 
-    assert "Column 'original_term' not found in data. Expected columns: original_code, original_term, clinical_effective_date, pseudo_nhs_number" in str(e.value)
+    assert "Column 'original_code' not found in data. Expected columns: original_code, clinical_effective_date, pseudo_nhs_number" in str(e.value)
 
 
 def test__standarise_column_names_but_extra_columns():
@@ -77,7 +78,7 @@ def test__standarise_column_names_but_extra_columns():
 
 def test__standarise_date_format_with_correct_data():
     observed_dataset = RawDataset(path="tests/test_data/primary_care/good_procedures_no_extra_cols.csv", dataset_type="primary_care", coding_system="SNOMED")
-    observed_dataset._standarise_column_names({"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+    observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
 
     # Standarise the date format
     observed_dataset._standarise_date_format()
@@ -90,7 +91,9 @@ def test__standarise_date_format_with_correct_data():
 
 def test__standarised_date_format_with_mixed_data():
     observed_dataset = RawDataset(path="tests/test_data/primary_care/procedures_with_mixed_dates.csv", dataset_type="primary_care", coding_system="SNOMED")
-    observed_dataset._standarise_column_names({"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+    observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number", "original_term": "term"})
+    observed_dataset._drop_unneeded_columns()
+    observed_dataset.column_validation: bool = observed_dataset._validate_column_names()
 
     # Standarise the date format
     observed_dataset._standarise_date_format()
@@ -128,12 +131,13 @@ def test__standarised_date_format_before_col_validation():
 def test__drop_unneeded_columns():
     observed_dataset = RawDataset(path="tests/test_data/primary_care/procedures.csv", dataset_type="primary_care", coding_system="SNOMED")
 
-    observed_dataset._standarise_column_names({"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
-    expected_columns = ["nhs_number", "id", "date", "code", "term"]
+    observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+    expected_columns = ["nhs_number", "id", "date", "code", "original_term"]
     assert set(observed_dataset.data.columns) == set(expected_columns)
 
     observed_dataset._drop_unneeded_columns()
     expected_columns.remove("id")
+    expected_columns = ["nhs_number", "date", "code"]
     assert set(observed_dataset.data.columns) == set(expected_columns)
 
 
@@ -186,11 +190,11 @@ def test_process_dataset():
     ingested_data = RawDataset(path="tests/test_data/primary_care/procedures_many_diffs.csv", dataset_type="primary_care", coding_system="SNOMED")
     assert ingested_data.data.shape == (27, 5)
 
-    processed_dataset = ingested_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], column_maps={"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
-    assert processed_dataset.data.shape == (7, 4)
+    processed_dataset = ingested_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], column_maps={"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
+    assert processed_dataset.data.shape == (7, 3)
 
     # Check the column names are correct
-    assert set(processed_dataset.data.columns) == set(["nhs_number", "date", "code", "term"])
+    assert set(processed_dataset.data.columns) == set(["nhs_number", "date", "code"])
 
 
 def test_processed_log():
@@ -201,7 +205,7 @@ def test_processed_log():
     ingested_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], column_maps={"original_code": "code", "original_term": "term", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
     assert "Column names not validated" in ingested_data.log[1]
     assert "Key columns are standardised, however extra columns found: extra_col. Run _drop_unneeded_columns() to drop these columns" in ingested_data.log[2]
-    assert "Unneeded 1 column(s) dropped" in ingested_data.log[3]
+    assert "Unneeded 2 column(s) dropped" in ingested_data.log[3]
     assert "Dropped 6 rows with empty values or empty date strings" in ingested_data.log[4]
     assert "Date format standarised" in ingested_data.log[5]
 
@@ -212,4 +216,100 @@ def test_with_barts_health_tab():
 
     # run the process_dataset method
     processed_data = raw_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], column_maps={"ICD_Diagnosis_Cd": "code", "ICD_Diag_Desc": "term", "Activity_date": "date", "PseudoNHS_2023_04_24": "nhs_number"})
-    assert processed_data.data.shape == (10, 4)
+    assert processed_data.data.shape == (10, 3)
+
+
+def test_with_nhs_digital():
+    raw_data = RawDataset(path="tests/test_data/nhs_digital/civreg.txt", dataset_type="nhs_digital", coding_system="ICD10")
+    raw_data._expand_cols_to_rows(hes_subtype="CIV_REG")
+    
+    # if you count, we have 17 ICD codes in the file
+    assert raw_data.data.shape == (17, 3)
+
+    # assert that 8 diagnoses for the first patient has the same nhs_number and date
+    first_patient_nhs_number = "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    first_patient_data = raw_data.data.filter(pl.col("nhs_number") == first_patient_nhs_number)
+
+    assert len(set(first_patient_data["nhs_number"])) == 1
+    assert len(set(first_patient_data["date"])) == 1
+    assert len(set(first_patient_data["code"])) == 8
+    assert set(first_patient_data["date"]) == {20230901}
+
+
+def test_with_nhs_digital_with_incorrect_type():
+    with pytest.raises(NotImplementedError) as e:
+        raw_data = RawDataset(path="tests/test_data/nhs_digital/civreg.txt", dataset_type="secondary_care", coding_system="ICD10")
+        raw_data._expand_cols_to_rows(hes_subtype="CIV_REG")
+
+    assert "This method is only implemented for NHS Digital datasets" in str(e.value)
+
+
+def test_with_nhs_digital_with_process_dataset():
+    raw_data = RawDataset(path="tests/test_data/nhs_digital/civreg.txt", dataset_type="nhs_digital", coding_system="ICD10")
+
+    processed_data = raw_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], nhs_digital_subtype="CIV_REG")
+
+    # Check integers are converted to dates
+    assert processed_data.data["date"].dtype == pl.Date
+
+    # Check the shape of the data - know there are 17 ICD 10 codes in the file
+    assert processed_data.data.shape == (17, 3)
+
+
+def test_with_nhs_digital_with_process_dataset_with_apc():
+    raw_data = RawDataset(path="tests/test_data/nhs_digital/apc.txt", dataset_type="nhs_digital", coding_system="ICD10")
+
+    processed_data = raw_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], nhs_digital_subtype="APC")
+
+    # Check integers are converted to dates
+    assert processed_data.data["date"].dtype == pl.Date
+
+    # Check the shape of the data - know there are 6 ICD 10 codes in the file
+    assert processed_data.data.shape == (6, 3)
+
+    # Check that the patient with ID 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A has 3 rows with 
+    # these code A100, A101, B101
+    first_patient_nhs_number = "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    first_patient_data = processed_data.data.filter(pl.col("nhs_number") == first_patient_nhs_number)
+    assert set(first_patient_data["code"]) == {"A100", "A101", "B101"}
+    assert first_patient_data['date'][0] == datetime.date(2000, 4, 30)
+
+    # Check that the patient with ID 73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B has 2 rows
+    # with these codes B101, B102
+    second_patient_nhs_number = "73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B"
+    second_patient_data = processed_data.data.filter(pl.col("nhs_number") == second_patient_nhs_number)
+    assert set(second_patient_data["code"]) == {"B101", "B102"}
+    assert second_patient_data['date'][0] == datetime.date(2000, 4, 2)
+
+
+def test_with_nhs_digital_with_process_dataset_with_op():
+    raw_data = RawDataset(path="tests/test_data/nhs_digital/op.txt", dataset_type="nhs_digital", coding_system="ICD10")
+
+    processed_data = raw_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], nhs_digital_subtype="OP")
+    
+    # chceck there are 6 codes in the file across 3 patients
+    assert processed_data.data.shape == (6, 3)
+
+    # Check that the patient with ID 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A has 2 rows with
+    # these codes A101, A102
+    first_patient_nhs_number = "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    first_patient_data = processed_data.data.filter(pl.col("nhs_number") == first_patient_nhs_number)
+    assert set(first_patient_data["code"]) == {"A101", "A102"}
+    assert first_patient_data['date'][0] == datetime.date(2021, 5, 6)
+
+    # Check that the patient with ID 73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B has 1 row
+    # with this code B101
+    second_patient_nhs_number = "73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B"
+    second_patient_data = processed_data.data.filter(pl.col("nhs_number") == second_patient_nhs_number)
+    assert set(second_patient_data["code"]) == {"B101"}
+    assert second_patient_data['date'][0] == datetime.date(2021, 4, 8)
+
+    # Check that the patient with ID 53952EF0503F7F341D9121DBCCC39DE95EA83713167E5E57EDB613A60D4C104C has 3 rows
+    # with these codes A101, A102, C101
+    third_patient_nhs_number = "53952EF0503F7F341D9121DBCCC39DE95EA83713167E5E57EDB613A60D4C104C"
+    third_patient_data = processed_data.data.filter(pl.col("nhs_number") == third_patient_nhs_number)
+    assert set(third_patient_data["code"]) == {"A101", "A102", "C101"}
+    correct_date = datetime.date(2021, 4, 4)
+    assert third_patient_data['date'][0] == correct_date
+    assert third_patient_data['date'][1] == correct_date
+    assert third_patient_data['date'][2] == correct_date

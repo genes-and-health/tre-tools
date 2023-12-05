@@ -27,11 +27,9 @@ def test_count_events():
     output_dicts = counter.counts["test_count"]["nhs_numbers"].to_dicts()
     nhs_number_dict = {item['nhs_number']: item for item in output_dicts}
     assert nhs_number_dict['73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B']['code'] == 100000001
-    assert nhs_number_dict['73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B']['term'] == 'Disease A - 1'
     assert nhs_number_dict['73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B']['date'] == "2013-06-03"
 
     assert nhs_number_dict['84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A']['code'] == 100000001
-    assert nhs_number_dict['84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A']['term'] == 'Disease A - 1'
     assert nhs_number_dict['84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A']['date'] == "2018-10-05"
 
     assert counter.counts["test_count"]["patient_count"] == 2
