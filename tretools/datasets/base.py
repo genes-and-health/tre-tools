@@ -64,6 +64,8 @@ class Dataset():
                     separator = '|'
                 elif ',' in first_line:
                     separator = ','
+                elif '\t' in first_line:
+                    separator = '\t'
                 else:
                     raise Exception("Unable to determine the file separator.")
             return pl.read_csv(path, separator=separator)
