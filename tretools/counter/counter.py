@@ -1,10 +1,34 @@
 
 
 from datetime import datetime
+from typing import Optional
+import polars as pl
 
 from tretools.codelists.codelist_types import CodelistType
 from tretools.counter.errors import MismatchBetweenDatasetAndCodelist
 from tretools.codelists.codelist import Codelist
+
+from tretools.datasets.demographic_dataset import DemographicDataset
+
+
+def categorize_age(age):
+    if age < 25:
+        return "18-24"
+    elif age < 35:
+        return "25-34"
+    elif age < 45:
+        return "35-44"
+    elif age < 55:
+        return "45-54"
+    elif age < 65:
+        return "55-64"
+    elif age < 75:
+        return "65-74"
+    elif age < 85:
+        return "75-84"
+    else:
+        return "85+"
+
 
 
 class EventCounter:
@@ -16,7 +40,7 @@ class EventCounter:
         self.counts = {}
         self.log = [f"{datetime.now()}: There are {self.dataset.data.shape[0]} events in the dataset"]
 
-    def count_events(self, name_of_count: str, codelist: Codelist) -> None:
+    def count_events(self, name_of_count: str, codelist: Codelist, demographics: Optional[DemographicDataset] = None) -> None:
         """
         Counts the number of events in the dataset for each code in the codelist.
 
@@ -50,14 +74,62 @@ class EventCounter:
         # Sort the data by nhs_number and date, then group by nhs_number to get the first event
         first_events = (filtered_data.sort(["nhs_number", "date"])
                         .groupby("nhs_number").first())
+        
+        # count of how many events per year
+        first_events = first_events.with_columns([
+            first_events["date"].str.slice(0, 4).alias("year_of_event"),
+        ])
+        year_of_event = first_events.groupby("year_of_event").agg(pl.count())
+
+        # person count
         person_count = first_events.shape[0]
         log.append(f"{datetime.now()}: There are {person_count} people in the dataset for the codelist")
+        
+        result_dict = 0
+        if demographics is not None:
+            # Merge the first events data with demographic together
+            first_events = first_events.join(demographics.data, on="nhs_number", how="inner")
+            
+            # Convert 'date' and 'dob' columns to datetime if they are not already
+            first_events = first_events.with_columns([
+                pl.col("date").str.strptime(pl.Date, "%Y-%m-%d", strict=False).alias("date"),
+            ])
+
+            # Calculate the age at event
+            first_events = first_events.with_columns(
+                ((pl.col("date") - pl.col("dob")).dt.days() / 365.25).cast(int).alias("age_at_event")
+            )
+
+            gender_map = {1: "M", 2: "F"}
+
+            # Apply categorization and mapping
+            first_events = first_events.with_columns([
+                first_events["age_at_event"].apply(categorize_age).alias("age_range"),
+                first_events["gender"].apply(lambda x: gender_map[x]).alias("gender_label")
+            ])
+
+            # Group by age range and gender, then count
+            result = first_events.groupby(["age_range", "gender_label"]).agg(pl.count())
+
+            # Drop the dempgraphic columns from the nhs_numbers DataFrame as we are only interested in the counts
+            # and wherever possible want to make it less easy to identify individuals
+            first_events = first_events.select(["nhs_number", "code", "date"])
+
+            # Convert the result to the desired dictionary format
+            result_dict = {age_range: {} for age_range in result["age_range"].unique()}
+            for row in result.rows():
+                age_range, gender, count = row
+                result_dict[age_range][gender] = count
+
+            log.append(f"{datetime.now()}: Demographic data added to the report")
 
         # Construct the counts DataFrame
         counts = {
             "code": codes,
             "patient_count": person_count,
             "event_count": event_count,
+            "demographics": result_dict,
+            "year_of_event": year_of_event,
             "nhs_numbers": first_events,
             "codelist_type": codelist.codelist_type,
             "dataset_type": self.dataset.dataset_type,

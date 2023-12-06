@@ -5,12 +5,27 @@ from tretools.phenotype_report.report import PhenotypeReport
 from tretools.phenotype_report.errors import ReportAlreadyExists, FileExists, InsufficientCounts
 from tretools.codelists.codelist import Codelist
 from tretools.datasets.processed_dataset import ProcessedDataset
+from tretools.datasets.demographic_dataset import DemographicDataset
 
 
 SNOMED_CODELIST = "tests/codelists/test_data/good_snomed_codelist.csv"
 PRIMARY_CARE_DATASET = "tests/test_data/primary_care/processed_data.csv"
 ICD_CODELIST = "tests/codelists/test_data/good_icd_codelist.csv"
 SECONDARY_CARE_DATASET = "tests/test_data/barts_health/diagnosis.csv"
+DEMOGRAPHIC_MAPPING_FILE = "tests/test_data/demographics/mapping.txt"
+DEMOGRAPHIC_FILE = "tests/test_data/demographics/gender_dummy.txt"
+MAPPING_CONFIG = {
+    "mapping": {
+        "OrageneID": "study_id",
+        "PseudoNHS_2023-11-08": "nhs_number"
+    },
+    "demographics": {
+        "S1QST_Oragene_ID": "study_id",
+        "S1QST_MM-YYYY_ofBirth": "dob",
+        "S1QST_Gender": "gender"
+    }
+}
+
 
 def test_load_phenotype_report():
     report = PhenotypeReport("Disease A")
@@ -147,3 +162,36 @@ def test_report_overlaps_insufficient_counts():
         report.report_overlaps()
 
     assert "Only 1 count has been run so comparison between datasets is not possible" in str(e.value)
+
+
+def test_report_with_demographics():
+    # snomed code and primary care
+    snomed_codelist = Codelist(SNOMED_CODELIST, "SNOMED")
+    primary_care = ProcessedDataset(PRIMARY_CARE_DATASET, "primary_care", "SNOMED")
+
+    # load the demographic data
+    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data.process_dataset(MAPPING_CONFIG)
+    
+    report = PhenotypeReport("Disease A")
+    report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
+
+    # check that the age at event is correct
+    # first patient with nhs number 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A 
+    # was born in Oct-1983 and had an event on 2018-10-05. We have not changed the rounding from the
+    # standard so we will round day of birth to 15. For age, we are rounding down to the nearest year. 
+    # Therefore, the age at event should be 34, as the patient was born on 15th Oct 1982 and had an
+    # event on 5th Oct 2018.    
+    # second patient with nhs number 73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B
+    # was born in Jan-1979 and had an event on 2013-06-03. Therefore, the age at event should be 34. 
+    # Therefore we should have 2 people in the 25-34 age group.
+    assert report.counts['test_count_primary_care']['demographics'] == {'25-34': {'M': 1, 'F': 1}}
+
+    # now we will change the rounding of the day of birth to 1st so that for the first patient, the event 
+    # will take place after their 35th birthday. So we should have 1 person in the 25-34 age group and 1
+    # person in the 35-44 age group.
+    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data.process_dataset(MAPPING_CONFIG, round_to_day_in_month=1)
+    report = PhenotypeReport("Disease A")
+    report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
+    assert report.counts['test_count_primary_care']['demographics'] == {'25-34': {'M': 1}, '35-44': {'F': 1}}
