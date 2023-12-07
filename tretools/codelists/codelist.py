@@ -5,27 +5,33 @@ import csv
 import os
 from typing import Optional, List, Dict
 import re
-<<<<<<< HEAD
 import polars as pl
-=======
-import polars
->>>>>>> origin/mapping
-
 
 from tretools.codelists.codelist_types import CodelistType
 from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError
 
 class Codelist:
-    def __init__(self, path: str, codelist_type: CodelistType, code_column: str = "code", term_column: str = "term", add_x_codes: bool = False) -> None:
+    def __init__(self, path: str,
+                 codelist_type: CodelistType,
+                 code_column: str = "code",
+                 term_column: str = "term",
+                 snomed_to_icd10_path: str = '',
+                 add_x_codes: bool = False,
+                 snomed_to_icd10: bool = False,
+                 ICD10_3Digit: bool = False) -> None:
         self.codelist_type = codelist_type
         self.code_column = code_column
         self.term_column = term_column
         self.codes = set()
-
+        
         if add_x_codes and self.codelist_type == "ICD10":
             self.data = self._load_codelist(path, add_x_codes)
         else:
             self.data = self._load_codelist(path)
+        if snomed_to_icd10:
+            self.data = self._SNOMED_to_ICD10(snomed_to_icd10_path)
+        if ICD10_3Digit:
+            self.data = self._ICD10_3Digit()
 
     def _load_codelist(self, path, add_x_codes: bool = False) -> List[Dict[str, str]]:
         """
@@ -213,44 +219,54 @@ class Codelist:
         return new_row
     
 
-    def SNOMED_to_ICD10(self, SNOMED_to_ICD10_map_file: str) -> None:
+    def _SNOMED_to_ICD10(self, SNOMED_to_ICD10_map_file: str) -> None:
+        """
+        maps SNOMED codes to their corresponding ICD10
+
+        Args:
+            SNOMED_to_ICD10_map_file (str): mapping file path
+        """
         
         # Using Polars for joining (otherwise longer code is needed)
-        codcolname = 'Code' # Code column name in SNOMED file
         map_file = pl.read_csv(SNOMED_to_ICD10_map_file)
-
         # Assuming self.data (should be checked) is a DataFrame (or Table) containing SNOMED codes
-        data_df = pl.DataFrame(self.data)
+
+        df_data = pl.DataFrame(self.data)
+
+        df_data = df_data.with_columns([
+            pl.col('code').cast(pl.Int64) 
+        ])
+
+        # df_data = df_data.with_column(df_data['code'].cast(pl.Object))
 
         # Joining data
-        ICD10_codes = data_df.join(map_file, on=codcolname, how='inner') \
-            .drop_duplicates() \
-            .drop(['ICD10_3digit'], axis=1) \
-            .drop(['Code', 'conceptid']) \
-            .rename([('mapTarget', 'Code')])
-            # .select(['PS NHS', 'Code', 'Date', 'Term', 'S1QST_MM-YYYY ofBirth', 'SIQST_gender'])
 
-        # Updating SNOMED codes with ICD10s
-        self.data = ICD10_codes['Code']
-        
+        df_ICD10_codes = df_data.join(map_file, left_on='code', right_on='conceptId' , how='inner') 
+        df_ICD10_codes = df_ICD10_codes.drop(['ICD10_3digit','code'])
+        df_ICD10_codes = df_ICD10_codes.rename({"mapTarget": "code"})
+        df_ICD10_codes = df_ICD10_codes.unique()
+        df_ICD10_codes = df_ICD10_codes[['code','term']]
+
+
+        list_of_dicts = df_ICD10_codes.to_dict(as_series=False)
+        list_of_dicts = [
+            {'code': str(code), 'term': term.strip()}
+            for code, term in zip(list_of_dicts['code'], list_of_dicts['term'])
+        ]
+
+        self.data = list_of_dicts
+
+        return self.data
         # If pandas is allowed:
         
-        # map_file = pd.read_csv(SNOMED_to_ICD10_map_file)
 
-        # self.data = pd.merge(self.data, map_file, left_on='Code', right_on='conceptId', how="inner").drop_duplicates().drop(['ICD10_3digit'], axis=1)
-        # self.data = self.data.drop(columns=['Code', 'conceptid'])
-        # self.data.rename(columns={'mapTarget': 'Code'}, inplace=True)
-        # self.data = self.data[['PS_NHS', 'Code', 'Date', 'Term', 'S1QST_MM-YYYY ofBirth', 'SIQST_gender']]
-
-    def ICD10_3Digit(self):
+    def _ICD10_3Digit(self):
         """
         Truncating ICD10 codes to contain the first 3 digits only
         """
-        self.data[self.code_column] = self.data[self.code_column].str[:3]
-
-        # self.data = self.data.with_column(self.code_column, self.data[self.code_column].apply(lambda x: x[:3])) in Polar
-<<<<<<< HEAD
-
-# test
-=======
->>>>>>> origin/mapping
+        print(self.data)
+        print(self.code_column)
+        for entry in self.data:
+            entry['code'] = entry['code'][:3]
+        return self.data
+        # self.data[self.code_column] = self.data[self.code_column].str[:3]
