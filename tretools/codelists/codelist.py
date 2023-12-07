@@ -246,3 +246,4 @@ class Codelist:
 
         # self.data = self.data.with_column(self.code_column, self.data[self.code_column].apply(lambda x: x[:3])) in Polar
 
+# test
