@@ -5,6 +5,7 @@ import csv
 import os
 from typing import Optional, List, Dict
 import re
+import polars
 
 
 from tretools.codelists.codelist_types import CodelistType
@@ -207,3 +208,39 @@ class Codelist:
 
         return new_row
 
+    def SNOMED_to_ICD10(self, SNOMED_to_ICD10_map_file: str) -> None:
+        
+        # Using Polars for joining (otherwise longer code is needed)
+        codcolname = 'Code' # Code column name in SNOMED file
+        map_file = pl.read_csv(SNOMED_to_ICD10_map_file)
+
+        # Assuming self.data (should be checked) is a DataFrame (or Table) containing SNOMED codes
+        data_df = pl.DataFrame(self.data)
+
+        # Joining data
+        ICD10_codes = data_df.join(map_file, on=codcolname, how='inner') \
+            .drop_duplicates() \
+            .drop(['ICD10_3digit'], axis=1) \
+            .drop(['Code', 'conceptid']) \
+            .rename([('mapTarget', 'Code')])
+            # .select(['PS NHS', 'Code', 'Date', 'Term', 'S1QST_MM-YYYY ofBirth', 'SIQST_gender'])
+
+        # Updating SNOMED codes with ICD10s
+        self.data = ICD10_codes['Code']
+        
+        # If pandas is allowed:
+        
+        # map_file = pd.read_csv(SNOMED_to_ICD10_map_file)
+
+        # self.data = pd.merge(self.data, map_file, left_on='Code', right_on='conceptId', how="inner").drop_duplicates().drop(['ICD10_3digit'], axis=1)
+        # self.data = self.data.drop(columns=['Code', 'conceptid'])
+        # self.data.rename(columns={'mapTarget': 'Code'}, inplace=True)
+        # self.data = self.data[['PS_NHS', 'Code', 'Date', 'Term', 'S1QST_MM-YYYY ofBirth', 'SIQST_gender']]
+
+    def ICD10_3Digit(self):
+        """
+        Truncating ICD10 codes to contain the first 3 digits only
+        """
+        self.data[self.code_column] = self.data[self.code_column].str[:3]
+
+        # self.data = self.data.with_column(self.code_column, self.data[self.code_column].apply(lambda x: x[:3])) in Polar
