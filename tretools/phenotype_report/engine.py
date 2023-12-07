@@ -189,3 +189,51 @@ class PhenotypeReportEngine():
             writer = csv.writer(csvfile)
             writer.writerow(columns)
 
+    def adding_DoB_Gender(self, GenderFilepath, GenderFile_OrageneID, GenderFile_PseudoNHS, GenderFile_Gender, DoBFile_Filepath, DoBFile_OrageneID, DoBFile_DoB):
+        pseudoNHSCol = 'PS_NHS'
+        codecol = 'Code'
+        unaccepted_PseudoNHS = ['UnfindableNHSnumber' , 'Studywithdrawal/IncompleteConsent/OtherIssue']
+
+        # Loading Gender file
+        GenderFilecols = (GenderFile_OrageneID, GenderFile_PseudoNHS, GenderFile_Gender)
+        # separator = self, separator(Genderfilepath) For this txt file, the separator is \t while for NHSD data it is ',' which is obtained by the dictionary of separators.
+        separator = '\t'
+        Gender_pseudoNHSoragene = pd.read_csv(GenderFilepath, usecols = GenderFilecols, dtype = {GenderFile_PseudoNHS : "string"}, sep=separator, lineterminator= '\n')
+        Gender_pseudoNHSoragene = Gender_pseudoNHSoragene[~Gender_pseudoNHSoragene[GenderFile_PseudoNHS].isin(unaccepted_PseudoNHS)].reset_index(drop=True)
+        # CHECKING individuals with the more than one gender
+        # agg_dic = {GenderFile_Gender:self.unique_list}
+        # MultipleGender = Gender_pseudoNHSoragene.groupby(GenderFile_OrageneID).agg(agg_dic).reset_index()
+        # MultipleGender['Number_of_Gender'] = MultipleGender[GenderFile_Gender].apply(len)
+        # MultipleGender = MultipleGender[MultipleGender['Number_of_Gender'] != 1]
+        # if len(MultipleGender) > 0:
+            #raise ValueError(f'There are individuals in {GenderFilepath} with more than one gender')
+        
+        # Loading DoB file
+        DoBFilecols = [DoBFile_OrageneID, DoBFile_DoB] # S1QST Gender column is not needed from this. S1QST gender from the next df has one more record :)
+        # separator = self.separator (DoBFile Filepath) For this txt file, the separator is \t while for NHSD data it is ',' which is obtained by the dictionary of separators.
+        DoB_OrageneID = pd.read_csv(DoBFile_Filepath, usecols = DoBFilecols, sep=separator)
+
+        # CHECKING individuals with the more than one DoBs
+        # agg_dic = {DoBFile_DoB: self.unique_list}
+        # MultipleDoB = DoB_OrageneID.groupby(DoBFile_OrageneID).agg(agg_dic).reset_index()
+        # MultipleDoB[ 'Number_of_DoB'] = MultipleDoB[DoBFile_DoB].apply(len)
+        # MultipleDoB = MultipleDoB[MultipleDoB['Number_of_DoB']!= 1]
+        # if len(MultipleDoB) > 0:
+            # raise ValueError (f'There are individuals in {DoBFile_Filepath] with more than one date of birth')
+        
+        pseudoNHS_DoB_Gender = pd.merge(DoB_OrageneID, Gender_pseudoNHSoragene, left_on = DoBFile_OrageneID, right_on = GenderFile_OrageneID, how = "inner").drop_duplicates().drop([DoBFile_OrageneID,GenderFile_OrageneID],axis = 1)
+        pseudoNHS_DoB_Gender = pseudoNHS_DoB_Gender.drop_duplicates(subset=[GenderFile_PseudoNHS])
+        pseudoNHS_DoB_Gender = pseudoNHS_DoB_Gender[[GenderFile_PseudoNHS, DoBFile_DoB, GenderFile_Gender]]
+        pseudoNHS_DoB_Gender [GenderFile_PseudoNHS] = pseudoNHS_DoB_Gender [GenderFile_PseudoNHS].astype(str)
+        pseudoNHS_DoB_Gender = pseudoNHS_DoB_Gender[pseudoNHS_DoB_Gender[GenderFile_PseudoNHS].str.len() == 64]
+        # pseudoNHS_DoB_Gender.to_pickle....
+        # pseudoNHS_DoB_Gender.to_csv...
+        self.result = pd.merge(self.result,pseudoNHS_DoB_Gender,left_on =pseudoNHSCol, right_on = GenderFile_PseudoNHS, how = "left").drop_duplicates()#
+        self.result = self.result.drop([GenderFile_PseudoNHS],axis = 1)
+        self.result = self.result [~self.result[codecol].isna()]
+        no_gender = self.result[(self.result[GenderFile_Gender] != 1.0) & (self.result[GenderFile_Gender] != 2.0) ][pseudoNHSCol].nunique()
+        if (no_gender>0):
+            display(self.result[(self.result[GenderFile_Gender] != 1.0) & (self.result[GenderFile_Gender] != 2.0)])
+            warnings.warn(f'The above individuals has gender not equal to 1 or 2' ,Userwarning)
+        # raise ValueError(f'there are individuals with gender not equal to 1 or 2')
+
