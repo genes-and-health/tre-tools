@@ -55,8 +55,20 @@ class Dataset():
         # if tab file, load using polars
         elif path.endswith(".tab"):
             return pl.read_csv(path, separator="\t")
+        # if txt file, separator is "|" or ","
+        # if txt file, determine separator by inspecting the first line
+        elif path.endswith(".txt"):
+            with open(path, 'r') as file:
+                first_line = file.readline()
+                if '|' in first_line:
+                    separator = '|'
+                elif ',' in first_line:
+                    separator = ','
+                else:
+                    raise Exception("Unable to determine the file separator.")
+            return pl.read_csv(path, separator=separator)
         else:
-            raise UnsupportedFileType("File type not supported. Must be either .csv or .arrow")
+            raise UnsupportedFileType("File type not supported. File type not supported. Must be either .csv, .txt or .arrow")
 
     def _validate_column_names(self) -> bool:
         """
@@ -66,7 +78,7 @@ class Dataset():
             bool: True if the column names match the expected ones, False otherwise.
         """
         # expected column names
-        expected_col_names = ["code", "term", "date", "nhs_number"]
+        expected_col_names = ["code", "date", "nhs_number"]
 
         # get column names of pl.DataFrame
         col_names = self.data.columns

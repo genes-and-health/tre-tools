@@ -75,11 +75,11 @@ def test_log_with_wrong_args():
     assert "Invalid option for overwrite_or_append. Must be either 'overwrite' or 'append'" in str(e.value)
 
 
-def test_raises_error_if_not_csv_or_feather():
+def test_raises_error_if_not_csv_or_feather_txt():
     with pytest.raises(UnsupportedFileType) as e:
-        ingested_data = Dataset(path="tests/test_data/primary_care/fake_data.txt", dataset_type="primary_care", coding_system="SNOMED")
+        ingested_data = Dataset(path="tests/test_data/primary_care/fake_data.xlsx", dataset_type="primary_care", coding_system="SNOMED")
 
-    assert "File type not supported. Must be either .csv or .arrow" in str(e.value)
+    assert "File type not supported. Must be either .csv, .txt or .arrow" in str(e.value)
 
 
 def test_writes_csv():
@@ -95,7 +95,7 @@ def test_writes_csv():
         rows = list(reader)
 
     assert len(rows) == 8
-    assert rows[0] == ["nhs_number", "code", "term", "date"]
+    assert rows[0] == ["nhs_number", "code", "date"]
     
     os.remove("tests/test_data/primary_care/test_data.csv")
 
@@ -118,7 +118,7 @@ def test_write_to_feather():
 def test_read_from_csv():
     # read the csv back in
     loaded_data = Dataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system="SNOMED")
-    assert loaded_data.data.shape == (7, 4)
+    assert loaded_data.data.shape == (7, 3)
 
 def test_read_from_feather():
     # read the feather file back in
@@ -129,3 +129,20 @@ def test_read_from_tab():
     # read from a tab file
     loaded_data = Dataset(path="tests/test_data/barts_health/diagnosis.tab", dataset_type="secondary_care", coding_system="ICD10")
     assert loaded_data.data.shape == (10, 6)
+
+def test_read_from_txt_with_commas():
+    # read from a txt file
+    loaded_data = Dataset(path="tests/test_data/nhs_digital/apc.txt", dataset_type="nhs_digital", coding_system="ICD10")
+    assert loaded_data.data.shape == (3, 220)
+
+def test_read_from_txt_with_pipes():
+    # read from a txt file
+    loaded_data = Dataset(path="tests/test_data/nhs_digital/civreg.txt", dataset_type="nhs_digital", coding_system="ICD10")
+    assert loaded_data.data.shape == (3, 157)
+
+def test_read_from_txt_with_wrong_separator():
+    # read from a txt file
+    with pytest.raises(Exception) as e:
+        loaded_data = Dataset(path="tests/test_data/nhs_digital/fake_data.txt", dataset_type="nhs_digital", coding_system="ICD10")
+
+    assert "Unable to determine the file separator." in str(e.value)

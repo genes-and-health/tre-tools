@@ -5,7 +5,11 @@ import csv
 import os
 from typing import Optional, List, Dict
 import re
+<<<<<<< HEAD
 import polars as pl
+=======
+import polars
+>>>>>>> origin/mapping
 
 
 from tretools.codelists.codelist_types import CodelistType
@@ -245,5 +249,8 @@ class Codelist:
         self.data[self.code_column] = self.data[self.code_column].str[:3]
 
         # self.data = self.data.with_column(self.code_column, self.data[self.code_column].apply(lambda x: x[:3])) in Polar
+<<<<<<< HEAD
 
 # test
+=======
+>>>>>>> origin/mapping

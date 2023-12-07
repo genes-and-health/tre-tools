@@ -1,4 +1,5 @@
 import polars as pl
+import json
 
 from datetime import datetime
 from typing import List, Dict
@@ -20,6 +21,49 @@ class RawDataset(Dataset):
 
         if self.column_validation:
             self.log.append(f"{datetime.now()}: Column names validated")
+
+    def _expand_cols_to_rows(self, hes_subtype: str, config_path: str = None):
+        # check the dataset type
+        if self.dataset_type != DatasetType.NHS_DIGITAL.value:
+            raise NotImplementedError("This method is only implemented for NHS Digital datasets")
+
+        # check if has overwritten config
+
+        # if not, check default config
+        if config_path is None:
+            if hes_subtype == "CIV_REG":
+                config_path = "tretools/datasets/configs/NHS_D/civ_reg.json"
+            elif hes_subtype == "APC":
+                config_path = "tretools/datasets/configs/NHS_D/apc.json"
+            elif hes_subtype == "OP":
+                config_path = "tretools/datasets/configs/NHS_D/op.json"
+        config = json.loads(open(config_path).read())
+
+        # log the shape of the data
+        self.log.append(f"{datetime.now()}: Data shape before expanding wide columns into rows: {self.data.shape}")
+
+        # melt the data
+        self.data = self.data.melt(id_vars=[config["nhs_number"], config["date"]], 
+                                   value_vars=config["column_to_expand"],
+                                   value_name="code")
+        
+        # drop the rows with null values in any columns or any empty strings
+        self.data = self.data.drop_nulls()
+        self.data = self.data.filter(pl.col("code") != "")
+
+        
+        # drop the variable column
+        self.data = self.data.drop("variable")
+        self._standarise_column_names(
+            column_maps={
+                config["nhs_number"]: "nhs_number",
+                config["date"]: "date",
+                "code": "code"
+            }
+        )
+
+        # log the action
+        self.log.append(f"{datetime.now()}: Data shape after expanding wide columns into rows: {self.data.shape}")
 
     def _standarise_column_names(self, column_maps: Dict[str, str]) -> None:
         """
@@ -72,9 +116,10 @@ class RawDataset(Dataset):
 
         date_col = "date"
 
-        # Convert the date strings using strptime
+        # Convert the date strings using strptime. Convert integers to strings first.
         date_converted = self.data.select(
         pl.coalesce(
+            pl.col(date_col).str.strptime(pl.Date, "%Y%m%d", strict=False),
             pl.col(date_col).str.strptime(pl.Date, "%F", strict=False),                   # "2018-10-05"
             pl.col(date_col).str.strptime(pl.Date, "%F %T", strict=False),                # "2018-10-05 12:15:30"
             pl.col(date_col).str.strptime(pl.Date, "%d/%m/%Y", strict=False),             # "05/11/2018"
@@ -85,7 +130,7 @@ class RawDataset(Dataset):
             pl.col(date_col).str.strptime(pl.Date, "%d-%m-%Y %H:%M:%S", strict=False),   # "19/10/2015 17:25:00"
             pl.col(date_col).str.strptime(pl.Date, "%B %d, %Y", strict=False),           # "July 19, 2016"
             pl.col(date_col).str.strptime(pl.Date, "%Y-%m-%d %H:%M", strict=False),       # "2016-08-20 07:10"
-            pl.col(date_col).str.strptime(pl.Date, "%d/%m/%Y %H:%M", strict=False)       # "01/01/2009 15:09"
+            pl.col(date_col).str.strptime(pl.Date, "%d/%m/%Y %H:%M", strict=False),
             ).alias(date_col)
         )
         # Drop the original date column and concatenate the converted one
@@ -96,17 +141,24 @@ class RawDataset(Dataset):
         """
         Drops all rows where any cell has a missing value or the date column is an empty string.
         """
+        date_col = "date"
+
+        # Check if the date column is of integer type, if so, convert to string
+        if self.data[date_col].dtype == pl.Int64:
+            self.data = self.data.with_columns(self.data[date_col].cast(pl.Utf8))
+
         # Count the number of rows before dropping
         num_rows_before = self.data.shape[0]
 
         # Drop rows where the date column is an empty string
-        condition = self.data["date"] != ''
+        condition = self.data[date_col] != ''
         
         # Drop rows with any missing value
         self.data = self.data.filter(condition).drop_nulls()
         num_rows_after = self.data.shape[0]
         
         self.log.append(f"{datetime.now()}: Dropped {num_rows_before - num_rows_after} rows with empty values or empty date strings")
+
 
     def _deduplicate(self, deduplication_options: List[DeduplicationOptions]) -> ProcessedDataset:
         """
@@ -137,11 +189,11 @@ class RawDataset(Dataset):
         Drops unneeded columns from the DataFrame.
         """
         num_of_cols_before = self.data.shape[1]
-        self.data = self.data.select(["nhs_number", "code", "term", "date"])
+        self.data = self.data.select(["nhs_number", "code", "date"])
         num_of_cols_after = self.data.shape[1]
         self.log.append(f"{datetime.now()}: Unneeded {num_of_cols_before - num_of_cols_after} column(s) dropped")
 
-    def process_dataset(self, deduplication_options: List[DeduplicationOptions], column_maps: Dict[str, str]) -> ProcessedDataset:
+    def process_dataset(self, deduplication_options: List[DeduplicationOptions], column_maps: Dict[str, str] = None, nhs_digital_subtype: str = None) -> ProcessedDataset:
         """
         Processes a raw dataset by standarising the column names, dropping unneeded columns, standarising the date format and deduplicating.
 
@@ -153,8 +205,13 @@ class RawDataset(Dataset):
         Returns:
             ProcessedDataset: A new dataset containing processed data.
         """
+        # if NHS Digital dataset, expand wide columns into rows
+        if self.dataset_type == DatasetType.NHS_DIGITAL.value:
+            self._expand_cols_to_rows(hes_subtype=nhs_digital_subtype)
+
         # Standarise the column names
-        self._standarise_column_names(column_maps)
+        else:
+            self._standarise_column_names(column_maps)
 
         # Drop unneeded columns
         self._drop_unneeded_columns()

@@ -1,0 +1,22 @@
+{
+    "nhs_number": "Study_ID",
+    "date": "REG_DATE_OF_DEATH",
+    "column_to_expand": [
+        "S_UNDERLYING_COD_ICD10",
+        "S_COD_CODE_1",
+        "S_COD_CODE_2",
+        "S_COD_CODE_3",
+        "S_COD_CODE_4",
+        "S_COD_CODE_5",
+        "S_COD_CODE_6",
+        "S_COD_CODE_7",
+        "S_COD_CODE_8",
+        "S_COD_CODE_9",
+        "S_COD_CODE_10",
+        "S_COD_CODE_11",
+        "S_COD_CODE_12",
+        "S_COD_CODE_13",
+        "S_COD_CODE_14",
+        "S_COD_CODE_15"
+    ]
+}
