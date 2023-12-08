@@ -255,7 +255,6 @@ class Codelist:
         ]
 
         self.data = list_of_dicts
-
         return self.data
         # If pandas is allowed:
         
@@ -264,8 +263,6 @@ class Codelist:
         """
         Truncating ICD10 codes to contain the first 3 digits only
         """
-        print(self.data)
-        print(self.code_column)
         for entry in self.data:
             entry['code'] = entry['code'][:3]
         return self.data

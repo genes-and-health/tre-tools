@@ -6,9 +6,13 @@ from tretools.codelists.errors import InvalidSNOMEDCodeError, InvalidOPCSCodesEr
 
 GOOD_SNOMED_PATH = "tests/codelists/test_data/good_snomed_codelist.csv"
 GOOD_ICD10_PATH = "tests/codelists/test_data/good_icd_codelist.csv"
+GOOD_ICD10_to_be_3digit_PATH = "tests/codelists/test_data/good_icd_codelist_to_be3digit.csv"
+GOOD_SNOMED_to_be_ICD10_PATH = "tests/codelists/test_data/good_SNOMEDS_to_be_ICD10.csv"
 CORRECT_DATA = [{'code': '100000001', 'term': 'Disease A - 1'}, {'code': '100000002', 'term': 'Disease A - 2'}]
 CORRECT_ICD_DATA_WITH_X = [{'code': 'A01', 'term': 'Disease A - 1'}, {'code': 'A01X', 'term': 'Disease A - 1'}, {'code': 'A02', 'term': 'Disease A - 2'}, {'code': 'A02X', 'term': 'Disease A - 2'}]
 CORRECT_ICD_DATA_WITHOUT_X = [{'code': 'A01', 'term': 'Disease A - 1'}, {'code': 'A02', 'term': 'Disease A - 2'}]
+CORRECT_3DigitICD10_DATA = [{'code': 'A01', 'term': 'Disease A - 1'},{'code': 'A02', 'term': 'Disease A - 2'},{'code': 'A02', 'term': 'Disease A - 3'}]
+CORRECT_SNOMED_TO_ICD10_DATA = [{'code': 'S597', 'term': 'Disease A - 1'},{'code': 'V281', 'term': 'Disease A - 2'},{'code': 'T215', 'term': 'Disease A - 3'}]
 
 
 def test_good_codelist():
@@ -154,3 +158,17 @@ def test_data_shape_codelist():
         data = Codelist("tests/codelists/test_data/extra_columns_snomed_codelist.csv", "SNOMED")
     
     assert "Invalid data shape. Expected 2 columns, but got 4 columns." in str(e.value)
+
+def test_ICD10_3Digit():
+    data = Codelist(GOOD_ICD10_to_be_3digit_PATH, "ICD10", ICD10_3Digit=True)
+    assert data.data == CORRECT_3DigitICD10_DATA
+
+def test_SNOMED_to_ICD10_mapping():
+    mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
+    data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED", snomed_to_icd10=True, snomed_to_icd10_path = mapping_file)
+
+    # sorting the test and correct data lists to take the two equal if all keys and values are the same
+    sorted_data = sorted(data.data, key=lambda x: x['code'])
+    sorted_correct_data = sorted(CORRECT_SNOMED_TO_ICD10_DATA, key=lambda x: x['code'])
+
+    assert sorted_data == sorted_correct_data
