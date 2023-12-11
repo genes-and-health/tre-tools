@@ -1,6 +1,6 @@
 import pytest
 
-from tretools.counter.counter import EventCounter
+from tretools.counter.counter import EventCounter, categorise_age
 from tretools.counter.errors import MismatchBetweenDatasetAndCodelist
 from tretools.codelists.codelist import Codelist
 from tretools.datasets.processed_dataset import ProcessedDataset
@@ -57,3 +57,15 @@ def test_count_events_mismatched_coding_system():
     assert "Coding system of dataset (SNOMED) does not match coding system of codelist (ICD10)" in str(e.value)
 
 
+def test_categorise_age():
+    assert categorise_age(20) == "18-24"
+    assert categorise_age(30) == "25-34"
+    assert categorise_age(40) == "35-44"
+    assert categorise_age(50) == "45-54"
+    assert categorise_age(60) == "55-64"
+    assert categorise_age(70) == "65-74"
+    assert categorise_age(80) == "75-84"
+    assert categorise_age(90) == "85+"
+
+    with pytest.raises(ValueError) as e:
+        categorise_age(10)

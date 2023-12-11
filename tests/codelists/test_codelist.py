@@ -1,7 +1,9 @@
 import pytest
 
 from tretools.codelists.codelist import Codelist
+from tretools.codelists.codelist_types import CodelistType
 from tretools.codelists.errors import InvalidSNOMEDCodeError, InvalidProcessingRequest, InvalidICD10CodeError, RepeatedCodeError, InvalidDataShapeError
+
 
 # Path to the codelists
 GOOD_SNOMED_PATH = "tests/codelists/test_data/good_snomed_codelist.csv"
@@ -18,14 +20,14 @@ CORRECT_3DigitICD10_DATA = [{'code': 'A01', 'term': 'Disease A - 1'},{'code': 'A
 
 
 def test_good_codelist():
-    data = Codelist(GOOD_SNOMED_PATH, "SNOMED")
+    data = Codelist(GOOD_SNOMED_PATH, CodelistType.SNOMED.value)
     assert data.codelist_type == "SNOMED"
     assert data.data == CORRECT_DATA    
 
 
 def test_bad_path_codelist():
     with pytest.raises(FileNotFoundError) as e:
-        data = Codelist("BAD_PATH", "SNOMED")
+        data = Codelist("BAD_PATH", CodelistType.SNOMED.value)
     
     assert "Could not find codelist at BAD_PATH" in str(e.value)
 
@@ -39,7 +41,7 @@ def test_invalid_codelist_type():
 
 def test_bad_snomed_validate_codelist():
     with pytest.raises(InvalidSNOMEDCodeError) as e:
-        data = Codelist(GOOD_ICD10_PATH, "SNOMED")
+        data = Codelist(GOOD_ICD10_PATH, CodelistType.SNOMED.value)
     
     assert "Invalid SNOMED code: A01 for term: Disease A - 1" in str(e.value)
 
@@ -55,7 +57,7 @@ def test_bad_snomed_wrong_length():
 
 def test_bad_icd10_validate_codelist_wrong_type():
     with pytest.raises(InvalidICD10CodeError) as e:
-        Codelist(GOOD_SNOMED_PATH, "ICD10")
+        Codelist(GOOD_SNOMED_PATH, CodelistType.ICD10.value)
     
     assert "Invalid ICD10 code: 100000001 for term: Disease A - 1" in str(e.value)
 
@@ -94,7 +96,7 @@ def test_bad_icd10_wrong_format():
 
 def test_bad_icd10_incorrect_format_in_csv():
     with pytest.raises(InvalidICD10CodeError) as e:
-        data = Codelist("tests/codelists/test_data/bad_icd_codelist.csv", "ICD10")
+        data = Codelist("tests/codelists/test_data/bad_icd_codelist.csv", CodelistType.ICD10.value)
     
     assert "Invalid ICD10 code: A012.1 for term: Disease A - 1" in str(e.value)
 
@@ -137,27 +139,27 @@ def test_bad_opcs_wrong_format():
     assert validation_check == False
 
 def test_check_x_code_added_to_icd10():
-    data = Codelist(GOOD_ICD10_PATH, "ICD10", add_x_codes=True)
+    data = Codelist(GOOD_ICD10_PATH, CodelistType.ICD10.value, add_x_codes=True)
     assert data.data == CORRECT_ICD_DATA_WITH_X
 
 def test_check_x_code_not_added_to_icd10():
-    data = Codelist(GOOD_ICD10_PATH, "ICD10", add_x_codes=False)
+    data = Codelist(GOOD_ICD10_PATH, CodelistType.ICD10.value, add_x_codes=False)
     assert data.data == CORRECT_ICD_DATA_WITHOUT_X
 
 def test_if_x_code_conditions_not_met():
-    data = Codelist("tests/codelists/test_data/good_icd_codelist_with_x.csv", "ICD10", add_x_codes=True)
+    data = Codelist("tests/codelists/test_data/good_icd_codelist_with_x.csv", CodelistType.ICD10.value, add_x_codes=True)
     expected_result = [{'code': 'A01X', 'term': 'Disease A - 1'}, {'code': 'A02.1', 'term': 'Disease A - 2'}]
     assert data.data == expected_result
 
 def test_repeated_code_codelist():
     with pytest.raises(RepeatedCodeError) as e:
-        data = Codelist("tests/codelists/test_data/repeated_code_snomed_codelist.csv", "SNOMED")
+        data = Codelist("tests/codelists/test_data/repeated_code_snomed_codelist.csv", CodelistType.SNOMED.value)
     
     assert "Repeated code found: 100000002" in str(e.value)
 
 def test_data_shape_codelist():
     with pytest.raises(InvalidDataShapeError) as e:
-        data = Codelist("tests/codelists/test_data/extra_columns_snomed_codelist.csv", "SNOMED")
+        data = Codelist("tests/codelists/test_data/extra_columns_snomed_codelist.csv", CodelistType.SNOMED.value)
     
     assert "Invalid data shape. Expected 2 columns, but got 4 columns." in str(e.value)
 

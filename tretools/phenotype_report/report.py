@@ -5,10 +5,12 @@ import csv
 import os
 from datetime import datetime
 from itertools import combinations
+from typing import Optional
 
 
 from tretools.counter.counter import EventCounter
 from tretools.datasets.base import Dataset
+from tretools.datasets.demographic_dataset import DemographicDataset
 from tretools.codelists.codelist import Codelist
 from tretools.phenotype_report.errors import ReportAlreadyExists, FileExists, InsufficientCounts
 
@@ -24,7 +26,7 @@ class PhenotypeReport():
         self.overlaps = {}
         self.logs = []
 
-    def add_count(self, name_of_count: str, codelist: Codelist, dataset: Dataset) -> None:
+    def add_count(self, name_of_count: str, codelist: Codelist, dataset: Dataset, demographics: Optional[DemographicDataset] = None) -> None:
         """
         Count the events in the dataset for the codelist and add to the report.
 
@@ -32,6 +34,7 @@ class PhenotypeReport():
             name_of_count (str): The name of the count.
             codelist (Codelist): The codelist to count.
             dataset (Dataset): The dataset to count.
+            demographics (DemographicDataset, optional): The demographic data to add to the report. Defaults to None.
 
         Raises:
             ReportAlreadyExists: If the report already exists.
@@ -41,9 +44,14 @@ class PhenotypeReport():
             raise ReportAlreadyExists(f"Report {name_of_count} already exists in this report.")
 
         counter = EventCounter(dataset)
-        counter.count_events(name_of_count=name_of_count, codelist=codelist)
+        counter.count_events(name_of_count=name_of_count, codelist=codelist, demographics=demographics)
+
+        # # if demographics are provided, add them to the report
+        # if demographics is not None:
+        #     self.add_demographic_data(counter, demographics)
 
         self.counts[name_of_count] = counter.counts[name_of_count]
+
         self.logs.append(f"Codelist {name_of_count} added to report {self.name} at {datetime.now()}. Log below from this count to follow.")
         self.logs.append(counter.counts[name_of_count]["log"])
 
@@ -66,11 +74,14 @@ class PhenotypeReport():
         output["name"] = self.name
         output["counts"] = self.counts
 
-        # Convert the nhs_numbers column to a list of dictionaries
+        # Convert the nhs_numbers column to a list of dictionaries. This is because the nhs_numbers column is a polars 
+        # DataFrame and cannot be saved to json.
         for named_count, count_detail in output["counts"].items():
             output["counts"][named_count]["nhs_numbers"] = count_detail["nhs_numbers"].to_dicts()
+
         output["logs"] = self.logs
 
+        # save the report to a json file. 
         with open(path, "w") as f:
             output['logs'].append(f"{datetime.now()}: Report saved to {path}")
             json.dump(output, f, indent=4)
@@ -128,3 +139,6 @@ class PhenotypeReport():
         # Store the overlaps in the report's overlaps attribute
         self.overlaps = overlaps
         self.logs.append(f"{datetime.now()}: Identified overlaps and unique NHS numbers for datasets.")
+
+
+

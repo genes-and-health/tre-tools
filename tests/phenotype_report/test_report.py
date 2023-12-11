@@ -1,17 +1,33 @@
 import pytest
 import os
+from datetime import datetime
 
 from tretools.phenotype_report.report import PhenotypeReport
 from tretools.phenotype_report.errors import ReportAlreadyExists, FileExists, InsufficientCounts
 from tretools.codelists.codelist import Codelist
 from tretools.datasets.processed_dataset import ProcessedDataset
+from tretools.datasets.demographic_dataset import DemographicDataset
 
 
 SNOMED_CODELIST = "tests/codelists/test_data/good_snomed_codelist.csv"
 PRIMARY_CARE_DATASET = "tests/test_data/primary_care/processed_data.csv"
 ICD_CODELIST = "tests/codelists/test_data/good_icd_codelist.csv"
 SECONDARY_CARE_DATASET = "tests/test_data/barts_health/diagnosis.csv"
+DEMOGRAPHIC_MAPPING_FILE = "tests/test_data/demographics/mapping.txt"
+DEMOGRAPHIC_FILE = "tests/test_data/demographics/gender_dummy.txt"
+MAPPING_CONFIG = {
+    "mapping": {
+        "OrageneID": "study_id",
+        "PseudoNHS_2023-11-08": "nhs_number"
+    },
+    "demographics": {
+        "S1QST_Oragene_ID": "study_id",
+        "S1QST_MM-YYYY_ofBirth": "dob",
+        "S1QST_Gender": "gender"
+    }
+}
 SNOMED_TO_ICD10_MAP = "tests/test_data/MappingFiles/snomed_to_icd_map.csv"
+
 
 def test_load_phenotype_report():
     report = PhenotypeReport("Disease A")
@@ -150,5 +166,60 @@ def test_report_overlaps_insufficient_counts():
     assert "Only 1 count has been run so comparison between datasets is not possible" in str(e.value)
 
 
+def test_report_with_demographics():
+    # snomed code and primary care
+    snomed_codelist = Codelist(SNOMED_CODELIST, "SNOMED")
+    primary_care = ProcessedDataset(PRIMARY_CARE_DATASET, "primary_care", "SNOMED")
 
+    # load the demographic data
+    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data.process_dataset(MAPPING_CONFIG)
+    
+    report = PhenotypeReport("Disease A")
+    report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
 
+    observed_report = report.counts["test_count_primary_care"]
+    assert set(observed_report['code']) == set([100000001, 100000002])
+    assert observed_report['patient_count'] == 2
+    assert observed_report['event_count'] == 4
+
+    patients = observed_report["nhs_numbers"].to_dicts()
+    assert len(patients) == 2
+
+    # first patient with nhs number 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A
+    # was born in Oct-1983 and had an event on 2018-10-05. We have not changed the rounding from the
+    # standard so we will round day of birth to 15. For age, we are rounding down to the nearest year.
+    # Therefore, the age at event should be 34, as the patient was born on 15th Oct 1982 and had an
+    # event on 5th Oct 2018.
+    assert patients[0]['nhs_number'] == "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    assert patients[0]['code'] == 100000001
+    assert patients[0]['date'] == datetime(2018, 10, 5).date()
+    assert patients[0]['age_at_event'] == 34
+    assert patients[0]['gender'] == "F"
+
+    # second patient with nhs number 73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B
+    # was born in Jan-1979 and had an event on 2013-06-03. For age, we are rounding down to the nearest
+    # year. Therefore, the age at event should be 34, as the patient was born in Jan 1979 and had an
+    # event on 3rd June 2013.
+    assert patients[1]['nhs_number'] == "73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B"
+    assert patients[1]['code'] == 100000001
+    assert patients[1]['date'] == datetime(2013, 6, 3).date()
+    assert patients[1]['age_at_event'] == 34
+    assert patients[1]['gender'] == "M"
+
+    # Now we are changing the rounding to the 1st of the month, therefore the patient with nhs number
+    # 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A should have an age of 35 as the
+    # patient was born on 1st Oct 1982 and had an event on 5th Oct 2018.
+    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data.process_dataset(MAPPING_CONFIG, round_to_day_in_month=1)
+
+    report = PhenotypeReport("Disease A")
+    report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
+    observed_report = report.counts["test_count_primary_care"]
+
+    patients = observed_report["nhs_numbers"].to_dicts()
+    assert patients[0]['nhs_number'] == "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    assert patients[0]['code'] == 100000001
+    assert patients[0]['date'] == datetime(2018, 10, 5).date()
+    assert patients[0]['age_at_event'] == 35
+    assert patients[0]['gender'] == "F"
