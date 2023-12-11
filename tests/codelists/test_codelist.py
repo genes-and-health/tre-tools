@@ -3,11 +3,13 @@ import pytest
 from tretools.codelists.codelist import Codelist
 from tretools.codelists.errors import InvalidSNOMEDCodeError, InvalidOPCSCodesError, InvalidICD10CodeError, RepeatedCodeError, InvalidDataShapeError
 
-
+# Path to the codelists
 GOOD_SNOMED_PATH = "tests/codelists/test_data/good_snomed_codelist.csv"
 GOOD_ICD10_PATH = "tests/codelists/test_data/good_icd_codelist.csv"
 GOOD_ICD10_to_be_3digit_PATH = "tests/codelists/test_data/good_icd_codelist_to_be3digit.csv"
 GOOD_SNOMED_to_be_ICD10_PATH = "tests/codelists/test_data/good_SNOMEDS_to_be_ICD10.csv"
+
+# Correct data for the codelists
 CORRECT_DATA = [{'code': '100000001', 'term': 'Disease A - 1'}, {'code': '100000002', 'term': 'Disease A - 2'}]
 CORRECT_ICD_DATA_WITH_X = [{'code': 'A01', 'term': 'Disease A - 1'}, {'code': 'A01X', 'term': 'Disease A - 1'}, {'code': 'A02', 'term': 'Disease A - 2'}, {'code': 'A02X', 'term': 'Disease A - 2'}]
 CORRECT_ICD_DATA_WITHOUT_X = [{'code': 'A01', 'term': 'Disease A - 1'}, {'code': 'A02', 'term': 'Disease A - 2'}]
@@ -160,15 +162,20 @@ def test_data_shape_codelist():
     assert "Invalid data shape. Expected 2 columns, but got 4 columns." in str(e.value)
 
 def test_ICD10_3Digit():
-    data = Codelist(GOOD_ICD10_to_be_3digit_PATH, "ICD10", ICD10_3Digit=True)
-    assert data.data == CORRECT_3DigitICD10_DATA
+    # This data file contains various definitions of ICD for the same disease (A01)
+    # for example, A01, A01X, A01.1 etc.
+    data = Codelist(GOOD_ICD10_to_be_3digit_PATH, "ICD10", icd10_3_digit_only=True)
 
-def test_SNOMED_to_ICD10_mapping():
-    mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
-    data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED", snomed_to_icd10=True, snomed_to_icd10_path = mapping_file)
+    # We are asserting each of these combinations of ICD codes are the same - they are all A01
+    for row in data.data:
+        assert row == {'code': 'A01', 'term': 'Disease A - 1'}
 
-    # sorting the test and correct data lists to take the two equal if all keys and values are the same
-    sorted_data = sorted(data.data, key=lambda x: x['code'])
-    sorted_correct_data = sorted(CORRECT_SNOMED_TO_ICD10_DATA, key=lambda x: x['code'])
-
-    assert sorted_data == sorted_correct_data
+# def test_SNOMED_to_ICD10_mapping():
+#     mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
+#     data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED", snomed_to_icd10=True, snomed_to_icd10_path = mapping_file)
+#
+#     # sorting the test and correct data lists to take the two equal if all keys and values are the same
+#     sorted_data = sorted(data.data, key=lambda x: x['code'])
+#     sorted_correct_data = sorted(CORRECT_SNOMED_TO_ICD10_DATA, key=lambda x: x['code'])
+#
+#     assert sorted_data == sorted_correct_data

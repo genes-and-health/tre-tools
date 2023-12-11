@@ -18,20 +18,22 @@ class Codelist:
                  snomed_to_icd10_path: str = '',
                  add_x_codes: bool = False,
                  snomed_to_icd10: bool = False,
-                 ICD10_3Digit: bool = False) -> None:
+                 icd10_3_digit_only: bool = False) -> None:
         self.codelist_type = codelist_type
         self.code_column = code_column
         self.term_column = term_column
         self.codes = set()
         
+        # Load the data from the path
         if add_x_codes and self.codelist_type == "ICD10":
             self.data = self._load_codelist(path, add_x_codes)
         else:
             self.data = self._load_codelist(path)
-        if snomed_to_icd10:
-            self.data = self._SNOMED_to_ICD10(snomed_to_icd10_path)
-        if ICD10_3Digit:
-            self.data = self._ICD10_3Digit()
+        
+        # if snomed_to_icd10:
+        #     self.data = self._snomed_to_icd(snomed_to_icd10_path)
+        if icd10_3_digit_only:
+            self._icd10_3_digit_only()
 
     def _load_codelist(self, path, add_x_codes: bool = False) -> List[Dict[str, str]]:
         """
@@ -219,51 +221,42 @@ class Codelist:
         return new_row
     
 
-    def _SNOMED_to_ICD10(self, SNOMED_to_ICD10_map_file: str) -> None:
-        """
-        maps SNOMED codes to their corresponding ICD10
+    # def _snomed_to_icd(self, mapping_file: str) -> None:
+    #     """
+    #     Maps SNOMED codes to their corresponding ICD10
+    #
+    #     Args:
+    #         mapping_file (str): mapping file path
+    #     """
+    #
+    #     map_file = pl.read_csv(mapping_file)
+    #
+    #     df_data = ""
+    #     df_data = df_data.with_columns([
+    #         pl.col('code').cast(pl.Int64)
+    #     ])
+    #
+    #     # Joining data
+    #     df_ICD10_codes = df_data.join(map_file, left_on='code', right_on='conceptId' , how='inner')
+    #     df_ICD10_codes = df_ICD10_codes.drop(['icd10_3_digit_only','code'])
+    #     df_ICD10_codes = df_ICD10_codes.rename({"mapTarget": "code"})
+    #     df_ICD10_codes = df_ICD10_codes.unique()
+    #     df_ICD10_codes = df_ICD10_codes[['code','term']]
+    #
+    #
+    #     list_of_dicts = df_ICD10_codes.to_dict(as_series=False)
+    #     list_of_dicts = [
+    #         {'code': str(code), 'term': term.strip()}
+    #         for code, term in zip(list_of_dicts['code'], list_of_dicts['term'])
+    #     ]
+    #
+    #     self.data = list_of_dicts
+    #     return self.data
 
-        Args:
-            SNOMED_to_ICD10_map_file (str): mapping file path
-        """
-        
-        # Using Polars for joining (otherwise longer code is needed)
-        map_file = pl.read_csv(SNOMED_to_ICD10_map_file)
-        # Assuming self.data (should be checked) is a DataFrame (or Table) containing SNOMED codes
 
-        df_data = pl.DataFrame(self.data)
-
-        df_data = df_data.with_columns([
-            pl.col('code').cast(pl.Int64) 
-        ])
-
-        # df_data = df_data.with_column(df_data['code'].cast(pl.Object))
-
-        # Joining data
-
-        df_ICD10_codes = df_data.join(map_file, left_on='code', right_on='conceptId' , how='inner') 
-        df_ICD10_codes = df_ICD10_codes.drop(['ICD10_3digit','code'])
-        df_ICD10_codes = df_ICD10_codes.rename({"mapTarget": "code"})
-        df_ICD10_codes = df_ICD10_codes.unique()
-        df_ICD10_codes = df_ICD10_codes[['code','term']]
-
-
-        list_of_dicts = df_ICD10_codes.to_dict(as_series=False)
-        list_of_dicts = [
-            {'code': str(code), 'term': term.strip()}
-            for code, term in zip(list_of_dicts['code'], list_of_dicts['term'])
-        ]
-
-        self.data = list_of_dicts
-        return self.data
-        # If pandas is allowed:
-        
-
-    def _ICD10_3Digit(self):
+    def _icd10_3_digit_only(self):
         """
         Truncating ICD10 codes to contain the first 3 digits only
         """
         for entry in self.data:
             entry['code'] = entry['code'][:3]
-        return self.data
-        # self.data[self.code_column] = self.data[self.code_column].str[:3]
