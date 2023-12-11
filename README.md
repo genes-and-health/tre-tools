@@ -66,10 +66,11 @@ diabetes_codelist = Codelist("diabetes.csv", "ICD10", add_x_codes=True)
 ```
 
 ### Datasets
-A `Dataset` is a collection of data that can be used to run against a codelist. There are 2 types of datasets:
+A `Dataset` is a collection of data that can be used to run against a codelist. There are 3 types of datasets:
 
 1. `RawDataset`
 2. `ProcessedDataset`
+3. `DemographicsDataset`
 
 All datasets have the ability to be written to a CSV file or a feather file. 
 
@@ -104,6 +105,19 @@ There are two main methods for a `ProcessedDataset`:
 1. `merge_with_dataset()`: This method allows you to merge two ProcessedDatasets together. It will check that the coding system and dataset type are the same, and that the column names are the same. It will then merge the two datasets together.
 2. `deduplicate()`: This method allows you to deduplicate the dataset. It will remove rows where the entire row is the same, and for duplicate NHS number and code, it will keep the first event after a specified date. If no date is specified, it will keep the first event.
 
+#### DemographicsDataset
+A `DemographicsDataset` is a dataset that contains demographic information about patients. It can be created by reading in two txt file containing the demographics information. 
+These files are:
+
+- File that maps NHS number to `S1QST_Oragene_ID`
+- File that maps `S1QST_Oragene_ID` to gender and month of birth. 
+
+In Gender, Males are represented by number 1 and Females by number 2.
+
+The DemographicsDataset has a method called `process_dataset()`. This method takes 2 parameters:
+- `column_maps`: A dictionary of column names to be renamed. This means indicating which of the column names in two parent files represent key columns.
+- `round_to_day_in_month`: The day of the month to round the date of birth to. Defaults to 15 (i.e. mid month).
+
 ## Phenotype Reports
 A phenotype report is a report that shows the number of patients in a dataset that have a code in a codelist. It takes a codelist and a dataset as input, and outputs a report showing the number of patients in the dataset that have a code in the codelist.
 
@@ -128,6 +142,18 @@ diabetes_report.add_count("primary_care", diabetes_codelist, primary_care_datase
 Note that the name of the count must be unique within the report. If you try to add a count with the same name as an existing count, it will raise an error.
 
 The `add_count()` method will count the number of patients in the dataset that have a code in the codelist. 
+
+### Demographics
+A phenotype report can also report on the demographics of patients in a dataset. This can be done if the 
+a `DemographicsDataset` is passed in to the optional argument `demographics_dataset` when calling the `add_count()` method. 
+
+```
+diabetes_report.add_count("primary_care", diabetes_codelist, primary_care_dataset, demographics_dataset=demographics_dataset)
+```
+
+This will add the following demographics to the report:
+- Gender
+- Age at first event
 
 ### Overlaps
 A phenotype report can also report on the overlaps between datasets. This can be done by calling the `report_overlaps()` method. This will report on patients unique to each dataset and those appearing in one or more datasets.
