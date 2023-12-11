@@ -11,6 +11,7 @@ SNOMED_CODELIST = "tests/codelists/test_data/good_snomed_codelist.csv"
 PRIMARY_CARE_DATASET = "tests/test_data/primary_care/processed_data.csv"
 ICD_CODELIST = "tests/codelists/test_data/good_icd_codelist.csv"
 SECONDARY_CARE_DATASET = "tests/test_data/barts_health/diagnosis.csv"
+SNOMED_TO_ICD10_MAP = "tests/test_data/MappingFiles/snomed_to_icd_map.csv"
 
 def test_load_phenotype_report():
     report = PhenotypeReport("Disease A")
@@ -147,3 +148,7 @@ def test_report_overlaps_insufficient_counts():
         report.report_overlaps()
 
     assert "Only 1 count has been run so comparison between datasets is not possible" in str(e.value)
+
+
+
+

@@ -1,28 +1,39 @@
 """
 This file contains the codelist class.
 """
+from __future__ import annotations
 import csv
 import os
 from typing import Optional, List, Dict
 import re
-
+import tempfile
 
 from tretools.codelists.codelist_types import CodelistType
-from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError
+from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError, InvalidProcessingRequest
 
 class Codelist:
-    def __init__(self, path: str, codelist_type: CodelistType, code_column: str = "code", term_column: str = "term", add_x_codes: bool = False) -> None:
+    def __init__(self, path: str,
+                 codelist_type: CodelistType,
+                 code_column: str = "code",
+                 term_column: str = "term",
+                 add_x_codes: bool = False,
+                 icd10_3_digit_only: bool = False) -> None:
         self.codelist_type = codelist_type
         self.code_column = code_column
         self.term_column = term_column
         self.codes = set()
-
-        if add_x_codes and self.codelist_type == "ICD10":
-            self.data = self._load_codelist(path, add_x_codes)
+        
+        # Load the data from the path
+        if self.codelist_type == "ICD10":
+            if add_x_codes or icd10_3_digit_only:
+                self.data = self._load_codelist(path, add_x_codes=add_x_codes, icd10_3_digit_only=icd10_3_digit_only)
+            else:
+                self.data = self._load_codelist(path)
         else:
             self.data = self._load_codelist(path)
 
-    def _load_codelist(self, path, add_x_codes: bool = False) -> List[Dict[str, str]]:
+
+    def _load_codelist(self, path, add_x_codes: bool = False, icd10_3_digit_only: bool = False) -> List[Dict[str, str]]:
         """
         Loads the codelist from the path.
 
@@ -35,6 +46,9 @@ class Codelist:
         if not self._check_path(path):
             raise FileNotFoundError(f"Could not find codelist at {path}")
 
+        if add_x_codes and icd10_3_digit_only:
+            raise InvalidProcessingRequest("Cannot add X codes and truncate ICD10 codes to 3 digits at the same time.")
+
         data = []
         with open(path, "r") as f:
             reader = csv.DictReader(f)
@@ -46,6 +60,12 @@ class Codelist:
 
                 # Validate the codelist. Raises errors if invalid.
                 self._validate_codelist(row)
+
+                # Truncating ICD10 codes to contain the first 3 digits only if icd10_3_digit_only is True
+                if icd10_3_digit_only:
+                    row = self._icd10_3_digit_only(row)
+
+                # Add the row to the data
                 data.append(row)
 
                 # Add the X codes for ICD-10 codes that do not have an X code
@@ -206,4 +226,62 @@ class Codelist:
         }
 
         return new_row
+    
+    @classmethod
+    def map_snomed_to_icd10(cls, codelist: Codelist, mapping_file: str, icd10_3_digit_only: bool = False) -> Codelist:
+        """
+        Maps SNOMED codes to their corresponding ICD10
 
+        Args:
+            mapping_file (str): mapping file path
+        """
+        # Raise error if the codelist is not SNOMED
+
+        # Check path to mapping file exists
+
+        # Decide whether to truncate ICD10 codes to 3 digits
+        if icd10_3_digit_only:
+            col_map = "ICD10_3digit"
+        else:
+            col_map = "mapTarget"
+
+        # Load the mapping file into a dictionary
+        with open(mapping_file, "r") as f:
+            reader = csv.DictReader(f)
+            mapping = {row["conceptId"]: row[col_map] for row in reader}
+
+        # Iterate through the data and map the SNOMED codes to ICD10 codes
+        new_data = {}
+        for row in codelist.data:
+            # If the SNOMED code is in the mapping file, add the ICD10 code to the new data
+            if row["code"] in mapping:
+                new_data[mapping[row["code"]]] = f"Mapped from SNOMED Code: {row['code']}, Term: {row['term']}"
+
+        # write the new data to a temporary file so it can be loaded into a new codelist object
+        # TODO: In the future, we should be able to load the data directly into a new codelist object
+        # without having to write to a temporary file first
+        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        writer = csv.DictWriter(temp_file, fieldnames=["code", "term"])
+        writer.writeheader()
+        for code, term in new_data.items():
+            writer.writerow({"code": code, "term": term})
+        temp_file.close()
+
+        # # make a new codelist object with the new data
+        new_codelist = Codelist(temp_file.name, "ICD10")
+        return new_codelist
+
+
+    def _icd10_3_digit_only(self, row: Dict[str, str]) -> [Dict[str, str]]:
+        """
+        Truncating ICD10 codes to contain the first 3 digits only
+
+        Args:
+            row (Dict[str, str]): The row data containing the code and term.
+
+        Returns:
+            Dict[str, str]: A new row with the truncated ICD10 code.
+        """
+        if len(row[self.code_column]) > 3:
+            row[self.code_column] = row[self.code_column][:3]
+        return row

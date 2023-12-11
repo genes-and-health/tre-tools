@@ -188,4 +188,3 @@ class PhenotypeReportEngine():
         with open(path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(columns)
-
