@@ -25,6 +25,7 @@ MAPPING_CONFIG = {
         "S1QST_Gender": "gender"
     }
 }
+SNOMED_TO_ICD10_MAP = "tests/test_data/MappingFiles/snomed_to_icd_map.csv"
 
 
 def test_load_phenotype_report():
@@ -195,3 +196,4 @@ def test_report_with_demographics():
     report = PhenotypeReport("Disease A")
     report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
     assert report.counts['test_count_primary_care']['demographics'] == {'25-34': {'M': 1}, '35-44': {'F': 1}}
+

@@ -21,3 +21,7 @@ class RepeatedCodeError(Exception):
 class InvalidDataShapeError(Exception):
     """Raised when the data shape is invalid."""
     pass
+
+class InvalidProcessingRequest(Exception):
+    """Raised when the processing request is invalid."""
+    pass

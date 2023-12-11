@@ -43,7 +43,7 @@ A `Codelist` is a collection of codelist numbers that can be used to run against
 
 1. SNOMED
 2. ICD10
-3. OPCS4
+3. OPCS
 
 A codelist can be created by reading in a CSV file. This CSV must have a code column and a term column. 
 
@@ -57,7 +57,7 @@ The easiest way is if these columns are named `code` and `term` respectively. If
 diabetes_codelist = Codelist("diabetes.csv", "SNOMED", code_column="snomed_code", term_column="snomed_term")
 ```
 
-The codelist will validate the codes to ensure they meet the expected format for the codelist type. For example, a SNOMED code must be 6 digits long. 
+The codelist will validate the codes to ensure they meet the expected format for the codelist type. For example, a SNOMED code must contain a restricted quantity of numbers.
 
 There is also an additional option for use with ICD10 codes to specify where you also want to add X codes - that is if you have a code that is A01, you also want to add A01X. This is done by setting the `add_x_codes` parameter to `True` when creating the codelist.
 
@@ -82,7 +82,7 @@ dataset = RawDataset(path="procedures.csv", dataset_type="primary_care", coding_
 
 We can convert this dataset to a `ProcessedDataset` by calling the `process_dataset()`. This will clean the dataset by standarising the column names, dropping unneeded columns, standarising the date format and deduplicating. It requires two parameters:
 
-1. `deduplication_options`: A list of columns to deduplicate on. This must include `nhs_number` and `code`, and can optionally include `term`.
+1. `deduplication_options`: A list of columns to deduplicate on. This must include `nhs_number` and `code`, and can optionally include `term` and `date`.
 2. `column_maps`: A dictionary of column names to be renamed. This means indicating which of the column name in the dataset is the NHS number, code and term.
 
 The `process_dataset()` method will return a `ProcessedDataset` instance. It does the following things:
