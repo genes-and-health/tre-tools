@@ -8,13 +8,13 @@ GOOD_SNOMED_PATH = "tests/codelists/test_data/good_snomed_codelist.csv"
 GOOD_ICD10_PATH = "tests/codelists/test_data/good_icd_codelist.csv"
 GOOD_ICD10_to_be_3digit_PATH = "tests/codelists/test_data/good_icd_codelist_to_be3digit.csv"
 GOOD_SNOMED_to_be_ICD10_PATH = "tests/codelists/test_data/good_SNOMEDS_to_be_ICD10.csv"
+REPEATED_SNOMED_to_be_ICD10_PATH= "tests/codelists/test_data/repeats_SNOMEDS_to_be_ICD10.csv"
 
 # Correct data for the codelists
 CORRECT_DATA = [{'code': '100000001', 'term': 'Disease A - 1'}, {'code': '100000002', 'term': 'Disease A - 2'}]
 CORRECT_ICD_DATA_WITH_X = [{'code': 'A01', 'term': 'Disease A - 1'}, {'code': 'A01X', 'term': 'Disease A - 1'}, {'code': 'A02', 'term': 'Disease A - 2'}, {'code': 'A02X', 'term': 'Disease A - 2'}]
 CORRECT_ICD_DATA_WITHOUT_X = [{'code': 'A01', 'term': 'Disease A - 1'}, {'code': 'A02', 'term': 'Disease A - 2'}]
 CORRECT_3DigitICD10_DATA = [{'code': 'A01', 'term': 'Disease A - 1'},{'code': 'A02', 'term': 'Disease A - 2'},{'code': 'A02', 'term': 'Disease A - 3'}]
-CORRECT_SNOMED_TO_ICD10_DATA = [{'code': 'S597', 'term': 'Disease A - 1'},{'code': 'V281', 'term': 'Disease A - 2'},{'code': 'T215', 'term': 'Disease A - 3'}]
 
 
 def test_good_codelist():
@@ -181,12 +181,56 @@ def test_ICD10_3Digit_with_X():
 
 
 
-# def test_SNOMED_to_ICD10_mapping():
-#     mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
-#     data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED", snomed_to_icd10=True, snomed_to_icd10_path = mapping_file)
-# #
-#     # sorting the test and correct data lists to take the two equal if all keys and values are the same
-#     sorted_data = sorted(data.data, key=lambda x: x['code'])
-#     sorted_correct_data = sorted(CORRECT_SNOMED_TO_ICD10_DATA, key=lambda x: x['code'])
-#
-#     assert sorted_data == sorted_correct_data
+def test_SNOMED_to_ICD10_mapping():
+    mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
+    data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED")
+    mapped_data = data.map_snomed_to_icd10(data, mapping_file)
+
+    assert mapped_data.codelist_type == "ICD10"
+    assert len(mapped_data.data) == 4
+
+    print(mapped_data.data)
+    assert mapped_data.data[0] == {'code': 'A011', 'term': 'Mapped from SNOMED Code: 100000001, Term: Disease A - 1'}
+    assert mapped_data.data[1] == {'code': 'A02.1', 'term': 'Mapped from SNOMED Code: 100000002, Term: Disease A - 2'}
+    assert mapped_data.data[2] == {'code': 'A03X', 'term': 'Mapped from SNOMED Code: 100000003, Term: Disease A - 3'}
+    assert mapped_data.data[3] == {'code': 'B0111', 'term': 'Mapped from SNOMED Code: 200000001, Term: Disease B - 1'}
+
+def test_SNOMED_to_ICD10_mapping_with_3_digit_truncating():
+    mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
+    data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED")
+    mapped_data = data.map_snomed_to_icd10(data, mapping_file, icd10_3_digit_only=True)
+
+    assert mapped_data.codelist_type == "ICD10"
+    assert len(mapped_data.data) == 4
+
+    assert mapped_data.data[0] == {'code': 'A01', 'term': 'Mapped from SNOMED Code: 100000001, Term: Disease A - 1'}
+    assert mapped_data.data[1] == {'code': 'A02', 'term': 'Mapped from SNOMED Code: 100000002, Term: Disease A - 2'}
+    assert mapped_data.data[2] == {'code': 'A03', 'term': 'Mapped from SNOMED Code: 100000003, Term: Disease A - 3'}
+    assert mapped_data.data[3] == {'code': 'B01', 'term': 'Mapped from SNOMED Code: 200000001, Term: Disease B - 1'}
+
+
+def test_SNOMED_to_ICD10_map_with_repeats():
+    mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
+    data = Codelist(REPEATED_SNOMED_to_be_ICD10_PATH, "SNOMED")
+    mapped_data = data.map_snomed_to_icd10(data, mapping_file)
+
+    assert mapped_data.codelist_type == "ICD10"
+
+    # Should only have 2 rows of data, as the first two rows
+    # with different snomed codes are mapped to the same ICD10 code
+    assert len(mapped_data.data) == 2
+
+    assert mapped_data.data[0] == {'code': 'B02.1', 'term': 'Mapped from SNOMED Code: 200000012, Term: Disease B - 1'}
+    assert mapped_data.data[1] == {'code': 'B02.2', 'term': 'Mapped from SNOMED Code: 200000022, Term: Disease B - 2'}
+
+def test_SNOMED_to_ICD10_map_with_repeats_3_digits():
+    mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
+    data = Codelist(REPEATED_SNOMED_to_be_ICD10_PATH, "SNOMED")
+    mapped_data = data.map_snomed_to_icd10(data, mapping_file, icd10_3_digit_only=True)
+
+    assert mapped_data.codelist_type == "ICD10"
+
+    # Should only have 1 row of data, as all the snomed codes are mapped to the same ICD10 code
+    assert len(mapped_data.data) == 1
+
+    assert mapped_data.data[0] == {'code': 'B02', 'term': 'Mapped from SNOMED Code: 200000022, Term: Disease B - 2'}

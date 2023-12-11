@@ -1,11 +1,12 @@
 """
 This file contains the codelist class.
 """
+from __future__ import annotations
 import csv
 import os
 from typing import Optional, List, Dict
 import re
-import polars as pl
+import tempfile
 
 from tretools.codelists.codelist_types import CodelistType
 from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError, InvalidProcessingRequest
@@ -226,38 +227,49 @@ class Codelist:
 
         return new_row
     
-
-    def _snomed_to_icd(self, mapping_file: str) -> None:
+    @classmethod
+    def map_snomed_to_icd10(cls, codelist: Codelist, mapping_file: str, icd10_3_digit_only: bool = False) -> Codelist:
         """
         Maps SNOMED codes to their corresponding ICD10
 
         Args:
             mapping_file (str): mapping file path
         """
-    #
-    #     map_file = pl.read_csv(mapping_file)
-    #
-    #     df_data = ""
-    #     df_data = df_data.with_columns([
-    #         pl.col('code').cast(pl.Int64)
-    #     ])
-    #
-    #     # Joining data
-    #     df_ICD10_codes = df_data.join(map_file, left_on='code', right_on='conceptId' , how='inner')
-    #     df_ICD10_codes = df_ICD10_codes.drop(['icd10_3_digit_only','code'])
-    #     df_ICD10_codes = df_ICD10_codes.rename({"mapTarget": "code"})
-    #     df_ICD10_codes = df_ICD10_codes.unique()
-    #     df_ICD10_codes = df_ICD10_codes[['code','term']]
-    #
-    #
-    #     list_of_dicts = df_ICD10_codes.to_dict(as_series=False)
-    #     list_of_dicts = [
-    #         {'code': str(code), 'term': term.strip()}
-    #         for code, term in zip(list_of_dicts['code'], list_of_dicts['term'])
-    #     ]
-    #
-    #     self.data = list_of_dicts
-    #     return self.data
+        # Raise error if the codelist is not SNOMED
+
+        # Check path to mapping file exists
+
+        # Decide whether to truncate ICD10 codes to 3 digits
+        if icd10_3_digit_only:
+            col_map = "ICD10_3digit"
+        else:
+            col_map = "mapTarget"
+
+        # Load the mapping file into a dictionary
+        with open(mapping_file, "r") as f:
+            reader = csv.DictReader(f)
+            mapping = {row["conceptId"]: row[col_map] for row in reader}
+
+        # Iterate through the data and map the SNOMED codes to ICD10 codes
+        new_data = {}
+        for row in codelist.data:
+            # If the SNOMED code is in the mapping file, add the ICD10 code to the new data
+            if row["code"] in mapping:
+                new_data[mapping[row["code"]]] = f"Mapped from SNOMED Code: {row['code']}, Term: {row['term']}"
+
+        # write the new data to a temporary file so it can be loaded into a new codelist object
+        # TODO: In the future, we should be able to load the data directly into a new codelist object
+        # without having to write to a temporary file first
+        temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        writer = csv.DictWriter(temp_file, fieldnames=["code", "term"])
+        writer.writeheader()
+        for code, term in new_data.items():
+            writer.writerow({"code": code, "term": term})
+        temp_file.close()
+
+        # # make a new codelist object with the new data
+        new_codelist = Codelist(temp_file.name, "ICD10")
+        return new_codelist
 
 
     def _icd10_3_digit_only(self, row: Dict[str, str]) -> [Dict[str, str]]:
