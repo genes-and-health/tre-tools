@@ -1,5 +1,6 @@
 import pytest
 import os
+from datetime import datetime
 
 from tretools.phenotype_report.report import PhenotypeReport
 from tretools.phenotype_report.errors import ReportAlreadyExists, FileExists, InsufficientCounts
@@ -177,23 +178,48 @@ def test_report_with_demographics():
     report = PhenotypeReport("Disease A")
     report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
 
-    # check that the age at event is correct
-    # first patient with nhs number 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A 
-    # was born in Oct-1983 and had an event on 2018-10-05. We have not changed the rounding from the
-    # standard so we will round day of birth to 15. For age, we are rounding down to the nearest year. 
-    # Therefore, the age at event should be 34, as the patient was born on 15th Oct 1982 and had an
-    # event on 5th Oct 2018.    
-    # second patient with nhs number 73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B
-    # was born in Jan-1979 and had an event on 2013-06-03. Therefore, the age at event should be 34. 
-    # Therefore we should have 2 people in the 25-34 age group.
-    assert report.counts['test_count_primary_care']['demographics'] == {'25-34': {'M': 1, 'F': 1}}
+    observed_report = report.counts["test_count_primary_care"]
+    assert set(observed_report['code']) == set([100000001, 100000002])
+    assert observed_report['patient_count'] == 2
+    assert observed_report['event_count'] == 4
 
-    # now we will change the rounding of the day of birth to 1st so that for the first patient, the event 
-    # will take place after their 35th birthday. So we should have 1 person in the 25-34 age group and 1
-    # person in the 35-44 age group.
+    patients = observed_report["nhs_numbers"].to_dicts()
+    assert len(patients) == 2
+
+    # first patient with nhs number 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A
+    # was born in Oct-1983 and had an event on 2018-10-05. We have not changed the rounding from the
+    # standard so we will round day of birth to 15. For age, we are rounding down to the nearest year.
+    # Therefore, the age at event should be 34, as the patient was born on 15th Oct 1982 and had an
+    # event on 5th Oct 2018.
+    assert patients[0]['nhs_number'] == "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    assert patients[0]['code'] == 100000001
+    assert patients[0]['date'] == datetime(2018, 10, 5).date()
+    assert patients[0]['age_at_event'] == 34
+    assert patients[0]['gender'] == "F"
+
+    # second patient with nhs number 73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B
+    # was born in Jan-1979 and had an event on 2013-06-03. For age, we are rounding down to the nearest
+    # year. Therefore, the age at event should be 34, as the patient was born in Jan 1979 and had an
+    # event on 3rd June 2013.
+    assert patients[1]['nhs_number'] == "73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B"
+    assert patients[1]['code'] == 100000001
+    assert patients[1]['date'] == datetime(2013, 6, 3).date()
+    assert patients[1]['age_at_event'] == 34
+    assert patients[1]['gender'] == "M"
+
+    # Now we are changing the rounding to the 1st of the month, therefore the patient with nhs number
+    # 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A should have an age of 35 as the
+    # patient was born on 1st Oct 1982 and had an event on 5th Oct 2018.
     demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
     demographic_data.process_dataset(MAPPING_CONFIG, round_to_day_in_month=1)
+
     report = PhenotypeReport("Disease A")
     report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
-    assert report.counts['test_count_primary_care']['demographics'] == {'25-34': {'M': 1}, '35-44': {'F': 1}}
+    observed_report = report.counts["test_count_primary_care"]
 
+    patients = observed_report["nhs_numbers"].to_dicts()
+    assert patients[0]['nhs_number'] == "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+    assert patients[0]['code'] == 100000001
+    assert patients[0]['date'] == datetime(2018, 10, 5).date()
+    assert patients[0]['age_at_event'] == 35
+    assert patients[0]['gender'] == "F"

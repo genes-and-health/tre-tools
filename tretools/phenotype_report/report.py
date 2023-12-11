@@ -79,9 +79,6 @@ class PhenotypeReport():
         for named_count, count_detail in output["counts"].items():
             output["counts"][named_count]["nhs_numbers"] = count_detail["nhs_numbers"].to_dicts()
 
-        # Convert the year of event column to a list of dictionaries for the same reason as above.
-        for named_count, count_detail in output["counts"].items():
-            output["counts"][named_count]["year_of_event"] = count_detail["year_of_event"].to_dicts()
         output["logs"] = self.logs
 
         # save the report to a json file. 

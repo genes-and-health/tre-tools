@@ -139,7 +139,7 @@ class PhenotypeReportEngine():
             add_x_codes (bool, str): Whether to add x codes to the codelist.
         
         """
-        # Allow the user to specify whether to add x codes by passing a boolean or a string 
+        # Allow the user to specify whether to add x codes by passing a boolean or a string
         # with yes, y, no, n
         if add_x_codes in ['Yes', 'yes', 'Y', 'y', True]:
             add_x_codes = True
