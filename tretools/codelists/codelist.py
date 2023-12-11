@@ -8,16 +8,14 @@ import re
 import polars as pl
 
 from tretools.codelists.codelist_types import CodelistType
-from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError
+from tretools.codelists.errors import InvalidSNOMEDCodeError, RepeatedCodeError, InvalidDataShapeError, InvalidICD10CodeError, InvalidOPCSCodesError, InvalidProcessingRequest
 
 class Codelist:
     def __init__(self, path: str,
                  codelist_type: CodelistType,
                  code_column: str = "code",
                  term_column: str = "term",
-                 snomed_to_icd10_path: str = '',
                  add_x_codes: bool = False,
-                 snomed_to_icd10: bool = False,
                  icd10_3_digit_only: bool = False) -> None:
         self.codelist_type = codelist_type
         self.code_column = code_column
@@ -25,17 +23,16 @@ class Codelist:
         self.codes = set()
         
         # Load the data from the path
-        if add_x_codes and self.codelist_type == "ICD10":
-            self.data = self._load_codelist(path, add_x_codes)
+        if self.codelist_type == "ICD10":
+            if add_x_codes or icd10_3_digit_only:
+                self.data = self._load_codelist(path, add_x_codes=add_x_codes, icd10_3_digit_only=icd10_3_digit_only)
+            else:
+                self.data = self._load_codelist(path)
         else:
             self.data = self._load_codelist(path)
-        
-        # if snomed_to_icd10:
-        #     self.data = self._snomed_to_icd(snomed_to_icd10_path)
-        if icd10_3_digit_only:
-            self._icd10_3_digit_only()
 
-    def _load_codelist(self, path, add_x_codes: bool = False) -> List[Dict[str, str]]:
+
+    def _load_codelist(self, path, add_x_codes: bool = False, icd10_3_digit_only: bool = False) -> List[Dict[str, str]]:
         """
         Loads the codelist from the path.
 
@@ -48,6 +45,9 @@ class Codelist:
         if not self._check_path(path):
             raise FileNotFoundError(f"Could not find codelist at {path}")
 
+        if add_x_codes and icd10_3_digit_only:
+            raise InvalidProcessingRequest("Cannot add X codes and truncate ICD10 codes to 3 digits at the same time.")
+
         data = []
         with open(path, "r") as f:
             reader = csv.DictReader(f)
@@ -59,6 +59,12 @@ class Codelist:
 
                 # Validate the codelist. Raises errors if invalid.
                 self._validate_codelist(row)
+
+                # Truncating ICD10 codes to contain the first 3 digits only if icd10_3_digit_only is True
+                if icd10_3_digit_only:
+                    row = self._icd10_3_digit_only(row)
+
+                # Add the row to the data
                 data.append(row)
 
                 # Add the X codes for ICD-10 codes that do not have an X code
@@ -221,13 +227,13 @@ class Codelist:
         return new_row
     
 
-    # def _snomed_to_icd(self, mapping_file: str) -> None:
-    #     """
-    #     Maps SNOMED codes to their corresponding ICD10
-    #
-    #     Args:
-    #         mapping_file (str): mapping file path
-    #     """
+    def _snomed_to_icd(self, mapping_file: str) -> None:
+        """
+        Maps SNOMED codes to their corresponding ICD10
+
+        Args:
+            mapping_file (str): mapping file path
+        """
     #
     #     map_file = pl.read_csv(mapping_file)
     #
@@ -254,9 +260,16 @@ class Codelist:
     #     return self.data
 
 
-    def _icd10_3_digit_only(self):
+    def _icd10_3_digit_only(self, row: Dict[str, str]) -> [Dict[str, str]]:
         """
         Truncating ICD10 codes to contain the first 3 digits only
+
+        Args:
+            row (Dict[str, str]): The row data containing the code and term.
+
+        Returns:
+            Dict[str, str]: A new row with the truncated ICD10 code.
         """
-        for entry in self.data:
-            entry['code'] = entry['code'][:3]
+        if len(row[self.code_column]) > 3:
+            row[self.code_column] = row[self.code_column][:3]
+        return row

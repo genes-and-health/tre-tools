@@ -1,7 +1,7 @@
 import pytest
 
 from tretools.codelists.codelist import Codelist
-from tretools.codelists.errors import InvalidSNOMEDCodeError, InvalidOPCSCodesError, InvalidICD10CodeError, RepeatedCodeError, InvalidDataShapeError
+from tretools.codelists.errors import InvalidSNOMEDCodeError, InvalidProcessingRequest, InvalidICD10CodeError, RepeatedCodeError, InvalidDataShapeError
 
 # Path to the codelists
 GOOD_SNOMED_PATH = "tests/codelists/test_data/good_snomed_codelist.csv"
@@ -170,10 +170,21 @@ def test_ICD10_3Digit():
     for row in data.data:
         assert row == {'code': 'A01', 'term': 'Disease A - 1'}
 
+
+def test_ICD10_3Digit_with_X():
+    # Should not be able to have X codes when icd10_3_digit_only is True
+    # as truncating the code to 3 digits will remove the X
+    with pytest.raises(InvalidProcessingRequest) as e:
+        data = Codelist(GOOD_ICD10_PATH, "ICD10", icd10_3_digit_only=True, add_x_codes=True)
+
+    assert "Cannot add X codes and truncate ICD10 codes to 3 digits at the same time." in str(e.value)
+
+
+
 # def test_SNOMED_to_ICD10_mapping():
 #     mapping_file = 'tests/codelists/test_data/snomed_to_icd_map.csv'
 #     data = Codelist(GOOD_SNOMED_to_be_ICD10_PATH, "SNOMED", snomed_to_icd10=True, snomed_to_icd10_path = mapping_file)
-#
+# #
 #     # sorting the test and correct data lists to take the two equal if all keys and values are the same
 #     sorted_data = sorted(data.data, key=lambda x: x['code'])
 #     sorted_correct_data = sorted(CORRECT_SNOMED_TO_ICD10_DATA, key=lambda x: x['code'])
