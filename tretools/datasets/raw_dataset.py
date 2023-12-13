@@ -181,6 +181,8 @@ class RawDataset(Dataset):
         # Create a new ProcessedDataset instance and return
         processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)
         processed_dataset.data = deduplicated_data
+        processed_dataset.log = self.log
+        processed_dataset.log.append(f"{datetime.now()}: Deduplicated data based on: {', '.join(deduplication_options)}")
 
         return processed_dataset
 

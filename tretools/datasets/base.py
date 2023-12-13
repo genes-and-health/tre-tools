@@ -16,9 +16,9 @@ class Dataset():
     def __init__(self, path, dataset_type: DatasetType, coding_system: CodelistType) -> None:
         self.dataset_type = dataset_type
         self.coding_system = coding_system
-        self.log = []
         self.path = path
         self.data = self._load_data(path)
+        self.log = []
 
     @staticmethod
     def _check_path(path: str) -> bool:
@@ -110,7 +110,6 @@ class Dataset():
                     f.write(line + "\n")
         else:
             raise WriteOptionsInvalid("Invalid option for overwrite_or_append. Must be either 'overwrite' or 'append'")
-
 
     def write_to_csv(self, path: str) -> None:
         """

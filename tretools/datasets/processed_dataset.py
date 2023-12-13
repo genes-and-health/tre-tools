@@ -15,8 +15,22 @@ from tretools.datasets.errors import DeduplicationError
 
 
 class ProcessedDataset(Dataset):
-    def __init__(self, path, dataset_type: DatasetType, coding_system: CodelistType) -> None:
+    def __init__(self, path, dataset_type: DatasetType, coding_system: CodelistType, log_path: Optional[str] = None) -> None:
         super().__init__(path, dataset_type, coding_system)
+
+        # load the log if a log path is provided
+        if log_path:
+            self._load_log_from_file(log_path)
+
+    def _load_log_from_file(self, log_path: str) -> None:
+        """
+        Loads a log from a file.
+
+        Args:
+            log_path (str): The path to the log file.
+        """
+        with open(log_path, "r") as f:
+            self.log = f.read().splitlines()
 
     def merge_with_dataset(self, dataset: ProcessedDataset) -> None:
         """
