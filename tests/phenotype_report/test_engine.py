@@ -30,10 +30,15 @@ def test__check_all_dataset_reachable():
 
 def test__check_all_codelist_reachable():
     with pytest.raises(FileNotFoundError) as e:
-        engine = PhenotypeReportEngine("tests/phenotype_report/test_index_bad_codelist_path.csv")
+        PhenotypeReportEngine("tests/phenotype_report/test_index_bad_codelist_path.csv")
 
     assert "Codelist file FAKE PATH not found." in str(e.value)
 
+
+# def test__load_codelist_with_variable_args():
+#     engine = PhenotypeReportEngine("tests/phenotype_report/test_full_index_different_x_args.csv")
+#
+#     assert False
 
 def test_orgainse_into_phenotypes():
     engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
