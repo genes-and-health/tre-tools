@@ -22,6 +22,7 @@ class Codelist:
         self.code_column = code_column
         self.term_column = term_column
         self.codes = set()
+        self.path = path
         
         # Load the data from the path
         if self.codelist_type == "ICD10":
