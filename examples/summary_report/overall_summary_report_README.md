@@ -12,5 +12,4 @@ This summary report provides an overview of the counts associated with each phen
 
 | Phenotype Name | Number of People with Events Across All Datasets | Paths to Summary Report per Phenotype | Paths to Readme Files for Each Phenotype |
 | --- | --- | --- | --- |
-| Disease A | 3 | tests/report_transformers/reports/Disease A/Disease A_summary_report.csv | tests/report_transformers/reports/Disease A/README.md |
-| Disease B | 2 | tests/report_transformers/reports/Disease B/Disease B_summary_report.csv | tests/report_transformers/reports/Disease B/README.md |
+| Disease A | 3 | summary_report/Disease A/Disease A_summary_report.csv | summary_report/Disease A/README.md |
