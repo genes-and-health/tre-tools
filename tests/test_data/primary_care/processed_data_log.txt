@@ -1,0 +1,7 @@
+2023-12-12 23:34:49.093090: Loaded data from tests/test_data/primary_care/procedures_many_diffs.csv
+2023-12-12 23:34:49.093102: Column names not validated
+2023-12-12 23:34:49.093124: Key columns are standardised, however extra columns found: original_term, extra_col. Run _drop_unneeded_columns() to drop these columns.
+2023-12-12 23:34:49.093152: Unneeded 2 column(s) dropped
+2023-12-12 23:34:49.093416: Dropped 6 rows with empty values or empty date strings
+2023-12-12 23:34:49.093617: Date format standarised
+2023-12-12 23:34:49.094783: Deduplicated data based on: nhs_number, code, date

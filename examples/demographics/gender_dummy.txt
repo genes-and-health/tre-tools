@@ -1,0 +1,4 @@
+S1QST_Oragene_ID	S1QST_MM-YYYY_ofBirth	S1QST_Gender	S1QST_EthnicGroup	S1QST_EthnicGroupOther	S1QST_NHSnumber_comment	S1QST_Diabetes	S1QST_ParentsBloodRelated	S1QST_ParentsBloodRelated2	S1QST_ParentsBloodRelatedOther	S1QST_HealthWellbeing
+11111111111111	10-1983	2	1		HasNHSnumber	2	2			1
+22222222222222	01-1979	1	1		HasNHSnumber	2	2			3
+33333333333333	06-1948	1	2		HasNHSnumber	1	2			2

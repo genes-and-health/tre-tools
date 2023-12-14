@@ -9,7 +9,7 @@ def test_load_processed_dataset():
     valid_column_names = observed_dataset._validate_column_names()
     assert valid_column_names == True
 
-    # assert data shape
+    # assert data shape
     assert observed_dataset.data.shape == (7, 3)
 
 

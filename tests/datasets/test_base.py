@@ -74,7 +74,6 @@ def test_log_with_wrong_args():
 
     assert "Invalid option for overwrite_or_append. Must be either 'overwrite' or 'append'" in str(e.value)
 
-
 def test_raises_error_if_not_csv_or_feather_txt():
     with pytest.raises(UnsupportedFileType) as e:
         ingested_data = Dataset(path="tests/test_data/primary_care/fake_data.xlsx", dataset_type="primary_care", coding_system="SNOMED")

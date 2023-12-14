@@ -1,0 +1,7 @@
+2023-12-12 22:48:16.082779: Loaded data from tests/test_data/barts_health/diagnosis.tab
+2023-12-12 22:48:16.082788: Column names not validated
+2023-12-12 22:48:16.082807: Key columns are standardised, however extra columns found: ICD_Diagnosis_Num, CDS_Activity_Dt. Run _drop_unneeded_columns() to drop these columns.
+2023-12-12 22:48:16.082835: Unneeded 3 column(s) dropped
+2023-12-12 22:48:16.082991: Dropped 0 rows with empty values or empty date strings
+2023-12-12 22:48:16.083152: Date format standarised
+2023-12-12 22:48:16.083314: Deduplicated data based on: nhs_number, code, date

@@ -73,6 +73,7 @@ class EventCounter:
         log.append(f"{datetime.now()}: There are {event_count} events in the dataset for the codelist")
 
         # Sort the data by nhs_number and date, then group by nhs_number to get the first event
+
         first_events = (filtered_data.sort(["nhs_number", "date"])
                         .groupby("nhs_number").first())
 
@@ -89,9 +90,11 @@ class EventCounter:
             "patient_count": person_count,
             "event_count": event_count,
             "nhs_numbers": first_events,
+            "codelist_path": codelist.path,
             "codelist_type": codelist.codelist_type,
             "dataset_type": self.dataset.dataset_type,
-            "log": log
+            "log": log,
+            "dataset_log": self.dataset.log,
         }
 
         # Add the counts to the counts dictionary
@@ -101,10 +104,12 @@ class EventCounter:
         # Merge the first events data with demographic together
         first_events = first_events.join(demographics.data, on="nhs_number", how="inner")
 
-        # Convert 'date' and 'dob' columns to datetime if they are not already
-        first_events = first_events.with_columns([
-            pl.col("date").str.strptime(pl.Date, "%Y-%m-%d", strict=False).alias("date"),
-        ])
+        # Convert 'date' and 'dob' columns to datetime if they are not already. If they are already datetime, then
+        # skip this step
+        if first_events["date"].dtype != pl.Date:
+            first_events = first_events.with_columns([
+                pl.col("date").str.strptime(pl.Date, "%Y-%m-%d", strict=False).alias("date"),
+            ])
 
         gender_map = {1: "M", 2: "F"}
 
