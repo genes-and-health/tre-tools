@@ -1,0 +1,11 @@
+phenotype,code,term,name,comment
+GNH0001_AtrialFibrillationFlutter,I480,ICD10,Paroxysmal atrial fibrillation,
+GNH0001_AtrialFibrillationFlutter,I481,ICD10,Persistent atrial fibrillation,
+GNH0001_AtrialFibrillationFlutter,5370000,SNOMED,Atrial flutter,
+GNH0001_AtrialFibrillationFlutter,49436004,SNOMED,Atrial fibrillation,
+GNH0002_CoronaryArteryDisease_narrow,K403,OPCS4,Saphenous vein graft replacement of three coronary arteries,
+GNH0002_CoronaryArteryDisease_narrow,K404,OPCS4,Saphenous vein graft replacement of four or more coronary arteries,
+GNH0002_CoronaryArteryDisease_narrow,K411,OPCS4,Autograft replacement of one coronary artery NEC,
+Primary_malignancy_mesothelioma,115232000,SNOMED,"[M]Mesothelioma, unspecified",
+Primary_malignancy_mesothelioma,254645002,SNOMED,Malignant mesothelioma of pleura,
+Primary_malignancy_oesophageal,C15,ICD10,Malignant neoplasm of oesophagus,
