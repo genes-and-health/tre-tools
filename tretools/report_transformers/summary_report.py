@@ -25,7 +25,7 @@ import os
 
 from tretools.report_transformers.base import ReportTransformer
 from tretools.phenotype_report.report import PhenotypeReport
-
+from tretools.report_transformers.utils import logs_to_markdown_table, codelist_to_markdown_table
 
 class SummaryReportTransformer(ReportTransformer):
     def __init__(self):
@@ -256,31 +256,3 @@ class SummaryReportTransformer(ReportTransformer):
 
         # make a readme for the overall summary report
         self._write_overall_summary_readme(path)
-
-
-def logs_to_markdown_table(logs):
-    """
-    Convert a list of log entries to a Markdown table.
-    Each log entry is assumed to be in the format 'YYYY-MM-DD HH:MM:SS.ssssss: Message'.
-    We format the timestamp to 'YYYY-MM-DD HH:MM' and separate the message.
-    """
-    markdown = "| Date | Message |\n| --- | --- |\n"
-
-    for log in logs:
-        # Split the log entry into timestamp and message
-        timestamp, message = log.split(": ", 1)
-        # Format the timestamp to 'YYYY-MM-DD HH:MM'
-        timestamp = timestamp.split(".")[0]
-        # Add the row to the table
-        markdown += f"| {timestamp} | {message} |\n"
-
-    return markdown
-
-def codelist_to_markdown_table(codes):
-    """
-    Convert a list of codes to a Markdown table.
-    """
-    markdown = "| Code |\n| --- |\n"  # Table header
-    for code in codes:
-        markdown += f"| {code} |\n"  # Table rows
-    return markdown
