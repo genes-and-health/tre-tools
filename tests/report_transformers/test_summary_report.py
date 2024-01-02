@@ -13,6 +13,26 @@ def test_summary_report_transformer():
     summary_reporter = SummaryReportTransformer.load_from_objects(phenotype_reports)
 
     # combine the reports
-    summary_reporter.transform(path="tests/report_transformers/reports")
+    summary_reporter.transform(path="tests/report_transformers/summary_reports")
+
+    # check that the directory was created
+    assert os.path.exists("tests/report_transformers/summary_reports/Disease A")
+    assert os.path.exists("tests/report_transformers/summary_reports/Disease B")
+
+    # check that the files were created
+    assert os.path.exists("tests/report_transformers/summary_reports/Disease A/Disease A_summary_report.csv")
+    assert os.path.exists("tests/report_transformers/summary_reports/Disease A/README.md")
+    assert os.path.exists("tests/report_transformers/summary_reports/Disease B/Disease B_summary_report.csv")
+    assert os.path.exists("tests/report_transformers/summary_reports/Disease B/README.md")
+    assert os.path.exists("tests/report_transformers/summary_reports/overall_summary_report_README.md")
+
+    # remove the directories and all files
+    os.remove("tests/report_transformers/summary_reports/Disease A/Disease A_summary_report.csv")
+    os.remove("tests/report_transformers/summary_reports/Disease A/README.md")
+    os.rmdir("tests/report_transformers/summary_reports/Disease A")
+    os.remove("tests/report_transformers/summary_reports/Disease B/Disease B_summary_report.csv")
+    os.remove("tests/report_transformers/summary_reports/Disease B/README.md")
+    os.rmdir("tests/report_transformers/summary_reports/Disease B")
+    os.remove("tests/report_transformers/summary_reports/overall_summary_report_README.md")
 
 
