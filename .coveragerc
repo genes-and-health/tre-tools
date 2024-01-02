@@ -1,3 +1,4 @@
-[run]
+[report]
+show_missing = True
 omit =
     tretools/report_transformers/base.py
