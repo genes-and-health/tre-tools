@@ -4,6 +4,8 @@ from tretools.codelists.codelist import Codelist
 from tretools.codelists.codelist_types import CodelistType
 from tretools.codelists.errors import InvalidSNOMEDCodeError, InvalidProcessingRequest, InvalidICD10CodeError, RepeatedCodeError, InvalidDataShapeError
 
+import csv
+
 
 # Path to the codelists
 GOOD_SNOMED_PATH = "tests/codelists/test_data/good_snomed_codelist.csv"
@@ -236,3 +238,9 @@ def test_SNOMED_to_ICD10_map_with_repeats_3_digits():
     assert len(mapped_data.data) == 1
 
     assert mapped_data.data[0] == {'code': 'B02', 'term': 'Mapped from SNOMED Code: 200000022, Term: Disease B - 2'}
+
+
+
+
+
+
