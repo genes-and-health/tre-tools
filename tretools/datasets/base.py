@@ -46,15 +46,16 @@ class Dataset():
         if not self._check_path(path):
             raise DatasetPathNotCorrect(f"Invalid path for Dataset: {path}")
         
+        null_values = ["", " ", "NULL"]
         # if csv file, load using polars
         if path.endswith(".csv"):
-            return pl.read_csv(path)
+            return pl.read_csv(path, null_values=null_values)
         # if feather file, load using polars
         elif path.endswith(".arrow"):
             return pl.read_ipc(path)
         # if tab file, load using polars
         elif path.endswith(".tab"):
-            return pl.read_csv(path, separator="\t")
+            return pl.read_csv(path, separator="\t", null_values=null_values)
         # if txt file, separator is "|" or ","
         # if txt file, determine separator by inspecting the first line
         elif path.endswith(".txt"):
@@ -68,7 +69,7 @@ class Dataset():
                     separator = '\t'
                 else:
                     raise Exception("Unable to determine the file separator.")
-            return pl.read_csv(path, separator=separator)
+            return pl.read_csv(path, separator=separator, null_values=null_values)
         else:
             raise UnsupportedFileType("File type not supported. File type not supported. Must be either .csv, .txt or .arrow")
 

@@ -77,7 +77,7 @@ class ProcessedDataset(Dataset):
         sorted_data = filtered_data.sort(["nhs_number", "code", "date"])
 
         # Now, drop duplicates based on nhs_number and code, keeping the first event after the date_start or just the first event if no date_start.
-        final_data = sorted_data.unique(subset=["nhs_number", "code"])
+        final_data = sorted_data.unique(subset=["nhs_number", "code", "date"])
 
         # Create a new ProcessedDataset instance and return
         processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)

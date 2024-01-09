@@ -152,7 +152,7 @@ def test__drop_all_null_rows():
     observed_dataset._drop_all_null_rows()
 
     # check shape of data
-    assert observed_dataset.data.shape == (6, 4)
+    assert observed_dataset.data.shape == (5, 4)
 
 
 def test__deduplicate():
