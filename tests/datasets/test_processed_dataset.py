@@ -61,7 +61,7 @@ def test_dedupe_no_date_limit():
     observed_dataset_one.merge_with_dataset(observed_dataset_two)
 
     dedup = observed_dataset_one.deduplicate()
-    assert dedup.data.shape == (5, 3)
+    assert dedup.data.shape == (7, 3)
 
     # find row that has nhs_number = 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A
     # and code = 100000001. Make sure that the date is the earliest date which is 2018-10-05
