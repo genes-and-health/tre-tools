@@ -46,7 +46,8 @@ class Dataset():
         if not self._check_path(path):
             raise DatasetPathNotCorrect(f"Invalid path for Dataset: {path}")
         
-        null_values = ["", " ", "NULL"]
+        null_values = ["", " ", "NULL", "NA", ".", "               ","                    ","6.92851E+14"]
+
         # if csv file, load using polars
         if path.endswith(".csv"):
             return pl.read_csv(path, null_values=null_values)
@@ -71,7 +72,7 @@ class Dataset():
                     raise Exception("Unable to determine the file separator.")
             return pl.read_csv(path, separator=separator, null_values=null_values)
         else:
-            raise UnsupportedFileType("File type not supported. File type not supported. Must be either .csv, .txt or .arrow")
+            raise UnsupportedFileType("File type not supported. Must be either .csv, .txt, .tab, or .arrow")
 
     def _validate_column_names(self) -> bool:
         """

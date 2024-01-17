@@ -12,6 +12,13 @@ from tretools.datasets.dataset_enums.dataset_types import DatasetType
 from tretools.codelists.codelist_types import CodelistType
 # from tretools.datasets.dataset_enums.deduplication_options import DeduplicationOptions
 from tretools.datasets.errors import DeduplicationError
+from tretools.codelists.errors import InvalidSNOMEDCodeError
+
+import csv
+import tempfile
+import polars as pl
+import os
+
 
 
 class ProcessedDataset(Dataset):
@@ -84,5 +91,71 @@ class ProcessedDataset(Dataset):
         processed_dataset.data = final_data
 
         return processed_dataset
+    
+    def snomed_to_icd10(self, SNOMED_ICD10_map, dataset) -> ProcessedDataset:
+        '''
+        It maps SNOMED data to ICD10s using a mapping file.
+        Args:
+            SNOMED_ICD10_map: The mapping file
+            dataset (ProcessedDataset): The dataset for mapping
+        '''
+        processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)
+
+        return processed_dataset
+    def map_snomed_to_icd10(self, processeddataset: ProcessedDataset, mapping_file: str, icd10_3_digit_only: bool = False) -> ProcessedDataset:
+        """
+        Maps SNOMED codes to their corresponding ICD10
+
+        Args:
+            mapping_file (str): mapping file path
+        """
+        # Raise error if the original code type is not SNOMED
+        if processeddataset.coding_system != 'SNOMED':
+            raise InvalidSNOMEDCodeError("The original code type must be SNOMED")
+
+        # Check path to mapping file exists
+        if not os.path.exists(mapping_file):
+            raise FileNotFoundError(f"requested mapping file is NOT found in {mapping_file}")
+
+            
+        # Decide whether to truncate ICD10 codes to 3 digits
+        if icd10_3_digit_only:
+            col_map = "ICD10_3digit"
+        else:
+            col_map = "mapTarget"
+        # Load the mapping file into a dictionary
+        with open(mapping_file, "r") as f:
+            reader = csv.DictReader(f)
+            mapping = {row["conceptId"]: row[col_map] for row in reader}
+
+        # Iterate through the data and map the SNOMED codes to ICD10 codes
+        mapped_data = {}
+
+        mapping = {int(key): value for key, value in mapping.items()}
+        
+        # Making a new column for ICD10 in the dataframe
+        df = processeddataset.data.with_columns(pl.col("code").map_dict(mapping).alias("ICD10"))
+        
+        # Making a list of dictionaries
+        mapped_data = [
+            {'code': entry['ICD10'], 'term': f'Mapped from SNOMED Code: {entry["code"]}, Term: {entry["term"]}'}
+            for entry in df.to_dicts()
+        ]
+
+        # Converting all to one dictionary (the last two steps can be merged, if needed)
+        mapped_data = {entry['code']: entry['term'] for entry in mapped_data}
+
+       # without having to write to a temporary file first
+        temp_file = tempfile.NamedTemporaryFile(suffix=".csv",mode="w", delete=False)
+        writer = csv.DictWriter(temp_file, fieldnames=["code", "term"])
+        writer.writeheader()
+        for code, term in mapped_data.items():
+            writer.writerow({"code": code, "term": term})
+        temp_file.close()
+        # # make a new codelist object with the new data
+        new_codelist = ProcessedDataset(temp_file.name, "ICD10",coding_system ="SNOMED")
+        # new_codelist = Codelist(temp_file.name, "ICD10")
+        return new_codelist
+
 
     
