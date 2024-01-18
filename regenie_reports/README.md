@@ -4,7 +4,7 @@
 
 ## Report Generation Date and Time
 
-This report was generated on 17 January 2024.
+This report was generated on 18 January 2024.
 
 ## Report Overview
 
@@ -18,13 +18,13 @@ In the interest of transparency, the logs for generating this report are provide
 
 | Date | Message |
 | --- | --- |
-| 2024-01-17 18:38:24 | Loaded 2 PhenotypeReports into the RegenieReportTransformer. |
-| 2024-01-17 18:38:24 | Loading the Broad ID/GSA reference file from tests/test_data/mapping_files/mapping_file.csv. |
-| 2024-01-17 18:38:24 | Combining the PhenotypeReports into a Regenie report. |
-| 2024-01-17 18:38:24 | Added 2 NHS numbers for disease_a_primary_care to the Regenie report. |
-| 2024-01-17 18:38:24 | Added 2 NHS numbers for disease_a_secondary_care to the Regenie report. |
-| 2024-01-17 18:38:24 | Added 2 NHS numbers for disease_b_primary_care to the Regenie report. |
-| 2024-01-17 18:38:24 | Finished combining the PhenotypeReports into a Regenie report. |
-| 2024-01-17 18:38:24 | Writing the summary file to regenie_reports/summary.csv. |
+| 2024-01-18 11:27:52 | Loaded 2 PhenotypeReports into the RegenieReportTransformer. |
+| 2024-01-18 11:27:52 | Loading the Broad ID/GSA reference file from tests/test_data/mapping_files/mapping_file.csv. |
+| 2024-01-18 11:27:52 | Combining the PhenotypeReports into a Regenie report. |
+| 2024-01-18 11:27:52 | Added 2 NHS numbers for disease_a_primary_care to the Regenie report. |
+| 2024-01-18 11:27:52 | Added 2 NHS numbers for disease_a_secondary_care to the Regenie report. |
+| 2024-01-18 11:27:52 | Added 2 NHS numbers for disease_b_primary_care to the Regenie report. |
+| 2024-01-18 11:27:52 | Finished combining the PhenotypeReports into a Regenie report. |
+| 2024-01-18 11:27:52 | Writing the summary file to regenie_reports/summary.csv. |
 
 

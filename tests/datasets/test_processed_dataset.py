@@ -3,6 +3,7 @@ import datetime
 
 from tretools.datasets.processed_dataset import ProcessedDataset
 from tretools.datasets.errors import DeduplicationError
+import os
 
 def test_load_processed_dataset():
     observed_dataset = ProcessedDataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system="SNOMED")
@@ -65,7 +66,9 @@ def test_dedupe_no_date_limit():
 
     # find row that has nhs_number = 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A
     # and code = 100000001. Make sure that the date is the earliest date which is 2018-10-05
+    
     data = dedup.data
+
     specific_row = data.filter((data["nhs_number"].eq("84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A")) & (data["code"].eq("100000001")))
     assert specific_row["date"][0] == "2018-10-05"
 
@@ -89,3 +92,27 @@ def test_dedupe_with_date_limit():
     data = dedup.data
     specific_row = data.filter((data["nhs_number"].eq("84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A")) & (data["code"].eq("100000001")))
     assert specific_row["date"][0] == "2018-11-05"
+    
+def test_SNOMED_to_ICD10_mapping():
+    # Get the current working directory
+    current_directory = os.getcwd()
+    # Construct the path to the test_data folder
+    test_data_path = os.path.join(current_directory, 'tests', 'codelists', 'test_data')
+    # Test data
+    GOOD_SNOMED_to_be_ICD10_PATH = f"{test_data_path}/good_SNOMEDS_to_be_ICD10.csv"
+    # Mapping file
+    mapping_file = f"{test_data_path}/snomed_to_icd_map.csv"
+
+    data = ProcessedDataset(GOOD_SNOMED_to_be_ICD10_PATH, dataset_type="primary_care", coding_system ="SNOMED")
+    mapped_data = data.map_snomed_to_icd10(data, mapping_file)
+
+    assert mapped_data.coding_system == "SNOMED" # Original coding system is meant to be SNOMED (can be changed, if needed)
+    assert len(mapped_data.data) == 4
+    assert mapped_data.data[0]['code'][0] == 'A011'
+    assert mapped_data.data[1]['code'][0] == 'A02.1'
+    assert mapped_data.data[2]['code'][0] == 'A03X'
+    assert mapped_data.data[3]['code'][0] == 'B0111'
+    assert mapped_data.data[0]['term'][0] == 'Mapped from SNOMED Code: 100000001, Term: Disease A - 1'
+    assert mapped_data.data[1]['term'][0] == 'Mapped from SNOMED Code: 100000002, Term: Disease A - 2'
+    assert mapped_data.data[2]['term'][0] == 'Mapped from SNOMED Code: 100000003, Term: Disease A - 3'
+    assert mapped_data.data[3]['term'][0] == 'Mapped from SNOMED Code: 200000001, Term: Disease B - 1'
