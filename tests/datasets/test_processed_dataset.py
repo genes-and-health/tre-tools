@@ -68,6 +68,7 @@ def test_dedupe_no_date_limit():
     # and code = 100000001. Make sure that the date is the earliest date which is 2018-10-05
     
     data = dedup.data
+    data = data.sort('date') # to avoid random orders at each run
 
     specific_row = data.filter((data["nhs_number"].eq("84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A")) & (data["code"].eq("100000001")))
     assert specific_row["date"][0] == "2018-10-05"
