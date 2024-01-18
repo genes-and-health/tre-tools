@@ -77,8 +77,7 @@ def test_log_with_wrong_args():
 def test_raises_error_if_not_csv_or_feather_txt():
     with pytest.raises(UnsupportedFileType) as e:
         ingested_data = Dataset(path="tests/test_data/primary_care/fake_data.xlsx", dataset_type="primary_care", coding_system="SNOMED")
-
-    assert "File type not supported. Must be either .csv, .txt or .arrow" in str(e.value)
+    assert "File type not supported. Must be either .csv, .txt, .tab, or .arrow" in str(e.value)
 
 
 def test_writes_csv():
