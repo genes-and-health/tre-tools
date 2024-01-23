@@ -88,10 +88,10 @@ fix: devenv
     $BIN/black .
     $BIN/isort .
 
-# run the tests
+# run the tests with suppression of warnings
 test *ARGS: devenv
     echo "Run tests"
-    $BIN/python -m pytest \
+    $BIN/python -m pytest -W ignore \
         --cov=tretools \
         --cov-report=html \
         --cov-report=term-missing:skip-covered \
