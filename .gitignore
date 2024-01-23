@@ -164,3 +164,10 @@ cython_debug/
 
 # Example
 examples/summary_report/*
+
+tests/report_transformers/regenie_reports/*.md
+tests/report_transformers/regenie_reports/*.csv
+tests/report_transformers/summary_reports/*.md
+tests/report_transformers/summary_reports/*.csv
+tests/report_transformers/summary_reports/*/
+tests/report_transformers/summary_reports/*/
