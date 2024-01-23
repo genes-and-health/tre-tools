@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Dict, List, Optional
-
+import polars as pl
 
 from tretools.datasets.base import Dataset
 from tretools.datasets.dataset_enums.dataset_types import DatasetType
@@ -65,23 +65,19 @@ class ProcessedDataset(Dataset):
         Returns:
             ProcessedDataset: A new dataset containing deduplicated data.
         """
-
         # Remove rows where the entire row is duplicated
         deduplicated_data = self.data.unique()
 
         # If date_start is provided, filter rows after date_start, else use the entire data
         filtered_data = deduplicated_data.filter(deduplicated_data["date"] >= date_start) if date_start else deduplicated_data
 
-
-        # Sort the data by nhs_number, code, and date. This ensures that when we drop duplicates based on nhs_number and code, we'll keep the first event.
-        sorted_data = filtered_data.sort(["nhs_number", "code", "date"])
-
-        # Now, drop duplicates based on nhs_number and code, keeping the first event after the date_start or just the first event if no date_start.
-        final_data = sorted_data.unique(subset=["nhs_number", "code", "date"])
+        # Now, drop duplicates based on nhs_number, code and date.
+        unique_data = filtered_data.unique(subset=["nhs_number", "code", "date"])
+        unique_sorted_data = unique_data.sort(pl.col("nhs_number"), pl.col("code"), pl.col("date"))
 
         # Create a new ProcessedDataset instance and return
         processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)
-        processed_dataset.data = final_data
+        processed_dataset.data = unique_sorted_data
 
         return processed_dataset
 
