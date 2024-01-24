@@ -31,7 +31,7 @@ def test_summary_report_transformer():
     assert set(first_mapping["gsa_id"]) == {"15001987654321_123456789012_R01C01"}
 
     # make the summary report
-    result = regenie_reporter.transform()
+    result = regenie_reporter.transform("tests/report_transformers/regenie_reports")
     first_phenotype = result[1]
     assert set(first_phenotype['FID']) == {1}
 
