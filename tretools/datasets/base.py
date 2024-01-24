@@ -39,7 +39,7 @@ class Dataset():
         if not self._check_path(path):
             raise DatasetPathNotCorrect(f"Invalid path for Dataset: {path}")
         
-        null_values = ["", " ", "NULL", "NA", "               ", ".", "                    ", "-"]
+        null_values = ["", " ", "NULL", "NA", "               ", ".", "                    ", "-", "NOT CLOSE"]
         try:
             # Attempt to read the data normally
             data = self._read_file(path, null_values)
