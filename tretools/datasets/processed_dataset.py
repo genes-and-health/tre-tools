@@ -10,8 +10,7 @@ import polars as pl
 from tretools.datasets.base import Dataset
 from tretools.datasets.dataset_enums.dataset_types import DatasetType
 from tretools.codelists.codelist_types import CodelistType
-# from tretools.datasets.dataset_enums.deduplication_options import DeduplicationOptions
-from tretools.datasets.errors import DeduplicationError
+from tretools.datasets.errors import DeduplicationError, CodeNotMappable
 
 
 class ProcessedDataset(Dataset):
@@ -78,6 +77,48 @@ class ProcessedDataset(Dataset):
         # Create a new ProcessedDataset instance and return
         processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)
         processed_dataset.data = unique_sorted_data
+
+        return processed_dataset
+    
+    def map_snomed_to_icd(self, mapping_file: str, snomed_col: str = "conceptID", icd_col: str = "mapTarget") -> ProcessedDataset:
+        """
+        Maps snomed codes to icd codes using a mapping file.
+
+        Args:
+            mapping_file (str): The path to the mapping file.
+
+        Returns:
+            ProcessedDataset: A new dataset containing the mapped data.
+        """
+        # Check the coding system is snomed
+        if self.coding_system != CodelistType.SNOMED.value:
+            raise CodeNotMappable("Coding system must be SNOMED for mapping to ICD10")
+
+        # Add to the log
+        new_log = []
+        new_log.append(f"{datetime.now()}: Loading mapping file from {mapping_file}")
+        new_log.append(f"{datetime.now()}: Pre-mapping dataset has {self.data.shape[0]} rows")
+
+        # Load the mapping file
+        mapping_df = pl.read_csv(mapping_file)
+
+        # Join the mapping file to the dataset
+        mapped_data = self.data.join(mapping_df, left_on="code", right_on=snomed_col, how="inner")
+        new_log.append(f"{datetime.now()}: Post-mapping dataset has {mapped_data.shape[0]} rows")
+        mapped_data = mapped_data.select([pl.col("nhs_number"), pl.col("date"), pl.col(icd_col).alias("code")])
+        new_log.append(f"{datetime.now()}: Renamed column {snomed_col} to code, and dropped other columns")
+
+        # Create a new ProcessedDataset instance and return
+        processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)
+        processed_dataset.data = mapped_data
+
+        # Add the new log to the processed dataset together with the old log
+        for log in new_log:
+            processed_dataset.log.append(log)
+
+        for log in self.log:
+            processed_dataset.log.append(log)
+        processed_dataset.log.sort()
 
         return processed_dataset
 

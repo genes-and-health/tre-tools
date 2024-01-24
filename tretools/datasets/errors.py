@@ -17,3 +17,7 @@ class ColumnsValidationError(Exception):
 class DeduplicationError(Exception):
     """Error in deduplication"""
     pass
+
+class CodeNotMappable(Exception):
+    """Error in deduplication"""
+    pass

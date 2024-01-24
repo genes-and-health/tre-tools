@@ -6,7 +6,7 @@ import pytest
 import os
 
 
-MAPPING_PATH = "tests/test_data/mapping_files/mapping_file.csv"
+MAPPING_PATH = "tests/test_data/mapping_files/regenie_mapping_file.csv"
 MAPPING_CONFIG = {"Pseudonhs_2023-11-08_uniq": "nhs_number",
                   "40028exomes_release_2023-JUL-07": "broad_id",
                   "51176GSA_Oct2023release": "gsa_id"
