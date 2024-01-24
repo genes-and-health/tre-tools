@@ -4,17 +4,24 @@ This module contains the DemographicDataset class.
 import polars as pl
 import os
 
-from typing import Dict
+from typing import Dict, Optional
 from datetime import datetime
 
 from tretools.datasets.base import Dataset
 
 
 class DemographicDataset(Dataset):
-    def __init__(self, path_to_mapping_file: str, path_to_demographic_file: str) -> pl.DataFrame:
+    def __init__(self, path: Optional[str] = None, path_to_mapping_file: Optional[str] = None, path_to_demographic_file: Optional[str] = None) -> None:
         self.log = []
-        self.mapped_data = self._load_data(path_to_mapping_file)
-        self.demographics = self._load_data(path_to_demographic_file)
+        self.data = None
+
+        if path is None:
+            self.mapped_data = self._load_data(path_to_mapping_file)
+            self.demographics = self._load_data(path_to_demographic_file)
+
+        if path is not None:
+            self.data = self._load_data(path)
+            
 
     def _clean_columns(self, data: pl.DataFrame, config: Dict[str, str]) -> None:
         """
@@ -67,7 +74,18 @@ class DemographicDataset(Dataset):
     def process_dataset(self, column_maps: Dict[str, str] = None, round_to_day_in_month: int = 15) -> None:
         """
         Combine the datasets and produce a new dataset with basic demographic information.
+
+        Args:
+            column_maps (Dict[str, str], optional): The column mappings to use. Defaults to None.
+            round_to_day_in_month (int, optional): The day to round the date of birth to. Defaults to 15.
+        
+        Raises:
+            ValueError: If the column_maps are not provided.
         """
+        # should not run if self.data has content
+        if self.data is not None:
+            raise ValueError("This method should not be called if demographic data is already loaded.")
+
         # Drop all unnecessary columns
         self.mapped_data = self._clean_columns(self.mapped_data, column_maps["mapping"])
         self.demographics = self._clean_columns(self.demographics, column_maps["demographics"])
@@ -79,11 +97,3 @@ class DemographicDataset(Dataset):
         self._convert_date(round_to_day_in_month)
 
         
-
-
-
-
-
-
-
-
