@@ -15,8 +15,6 @@ from tretools.datasets.processed_dataset import ProcessedDataset
 class RawDataset(Dataset):
     def __init__(self, path, dataset_type: DatasetType, coding_system: CodelistType) -> None:
         super().__init__(path, dataset_type, coding_system)
-        self.data = self._load_data(path)
-        self.log.append(f"{datetime.now()}: Loaded data from {path}")
         self.column_validation: bool = self._validate_column_names()
 
         if self.column_validation:
@@ -75,9 +73,7 @@ class RawDataset(Dataset):
         Raises:
             ValueError: If the column names have already been validated.
         """
-        if self.column_validation:
-            raise ColumnsValidationError("Column names have already been validated")
-        else:
+        if self.column_validation is False:
             self.log.append(f"{datetime.now()}: Column names not validated")
 
         # Check if all columns in the mapping exist in the data
@@ -130,7 +126,8 @@ class RawDataset(Dataset):
             pl.col(date_col).str.strptime(pl.Date, "%d-%m-%Y %H:%M:%S", strict=False),   # "19/10/2015 17:25:00"
             pl.col(date_col).str.strptime(pl.Date, "%B %d, %Y", strict=False),           # "July 19, 2016"
             pl.col(date_col).str.strptime(pl.Date, "%Y-%m-%d %H:%M", strict=False),       # "2016-08-20 07:10"
-            pl.col(date_col).str.strptime(pl.Date, "%d/%m/%Y %H:%M", strict=False),
+            pl.col(date_col).str.strptime(pl.Date, "%d/%m/%Y %H:%M", strict=False),      # "19/10/2015 17:25"
+            pl.col(date_col).str.strptime(pl.Date, "%FT%TZ", strict=False),               # "2016-08-20T07:10:00Z"
             ).alias(date_col)
         )
         # Drop the original date column and concatenate the converted one
