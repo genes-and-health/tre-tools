@@ -3,6 +3,7 @@ import datetime
 import polars as pl
 
 from tretools.datasets.processed_dataset import ProcessedDataset
+from tretools.datasets.demographic_dataset import DemographicDataset
 from tretools.codelists.codelist_types import CodelistType
 from tretools.datasets.errors import DeduplicationError, CodeNotMappable
 
@@ -116,16 +117,16 @@ def test_mapped_to_icd_with_specific_col():
 
     assert "Coding system must be SNOMED for mapping to ICD10" in str(e.value)
 
-
 def test_mapped_to_icd_logs():
     observed_dataset = ProcessedDataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system=CodelistType.SNOMED.value, log_path="tests/test_data/primary_care/processed_data_log.txt")
     mapped_dataset = observed_dataset.map_snomed_to_icd(mapping_file="tests/test_data/mapping_files/snomed_icd_map.csv")
 
-    # there are 7 logs in the original dataset, and 4 created by the mapping function
+    # there are 7 logs in the original dataset, 1 from loading and 4 created by the mapping function
     assert len(mapped_dataset.log) == 11
     assert "Loading mapping file from tests/test_data/mapping_files/snomed_icd_map.csv" in mapped_dataset.log[7]
     assert "Pre-mapping dataset has 7 rows" in mapped_dataset.log[8]
     assert "Post-mapping dataset has 4 rows" in mapped_dataset.log[9]
+
 
 
 def test_truncate_icd_to_3_digits():
@@ -147,8 +148,8 @@ def test_truncate_icd_to_3_digits_logs():
     observed_dataset = ProcessedDataset(path="tests/test_data/barts_health/diagnosis.csv", dataset_type="secondary_care", coding_system=CodelistType.ICD10.value, log_path="tests/test_data/barts_health/diagnosis_log.txt")
     truncated_dataset = observed_dataset.truncate_icd_to_3_digits()
 
-    # there are 7 logs in the original dataset, and 3 created by the truncation function
-    assert len(truncated_dataset.log) == 10
+    # there are 7 logs in the original dataset, 1 from loading and 3 created by the truncation function
+    assert len(truncated_dataset.log) == 11
     assert "Post-truncation dataset has 10 rows" in truncated_dataset.log[9]
 
 
@@ -158,3 +159,31 @@ def test_truncate_icd_to_3_digits_wrong_coding_system():
         observed_dataset.truncate_icd_to_3_digits()
 
     assert "Coding system must be ICD10 for truncating to 3 digits" in str(e.value)
+
+def test_removes_unrealistic_data():
+    observed_dataset = ProcessedDataset(path="tests/test_data/primary_care/procedures_with_unrealistic_values.csv", dataset_type="primary_care", coding_system="SNOMED")
+    cleaned_dataset = observed_dataset.remove_unrealistic_dates(before_born=False)
+
+    # assert no data is dropped
+    assert cleaned_dataset.data.shape == (1, 3)
+
+    # assert that the date is 1910-01-01
+    assert cleaned_dataset.data["date"][0] == "1910-01-01"
+
+
+def test_removes_unrealistic_data_before_born():
+    observed_dataset = ProcessedDataset(path="tests/test_data/primary_care/procedures_with_unrealistic_values.csv", dataset_type="primary_care", coding_system="SNOMED")
+    demographic_dataset = DemographicDataset(path="tests/test_data/demographics/processed.csv")
+
+    cleaned_dataset = observed_dataset.remove_unrealistic_dates(before_born=True, demographic_dataset=demographic_dataset)
+    assert cleaned_dataset.data.shape == (0, 3)
+
+
+
+def test_removes_unrealistic_data_before_born_but_no_data():
+    observed_dataset = ProcessedDataset(path="tests/test_data/primary_care/procedures_with_unrealistic_values.csv", dataset_type="primary_care", coding_system="SNOMED")
+
+    with pytest.raises(ValueError) as e:
+        observed_dataset.remove_unrealistic_dates(before_born=True)
+
+    assert "A demographic dataset must be provided if before_born is True" in str(e.value)
