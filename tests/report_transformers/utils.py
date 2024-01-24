@@ -35,7 +35,7 @@ def make_phenotype_reports_for_testing():
     icd_codelist = Codelist(ICD_CODELIST, CodelistType.ICD10.value)
 
     # load the demographic data
-    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data = DemographicDataset(path_to_mapping_file=DEMOGRAPHIC_MAPPING_FILE, path_to_demographic_file=DEMOGRAPHIC_FILE)
     demographic_data.process_dataset(MAPPING_CONFIG)
 
     # Make a list of PhenotypeReports

@@ -172,7 +172,7 @@ def test_report_with_demographics():
     primary_care = ProcessedDataset(PRIMARY_CARE_DATASET, "primary_care", "SNOMED")
 
     # load the demographic data
-    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data = DemographicDataset(path_to_mapping_file=DEMOGRAPHIC_MAPPING_FILE, path_to_demographic_file=DEMOGRAPHIC_FILE)
     demographic_data.process_dataset(MAPPING_CONFIG)
     
     report = PhenotypeReport("Disease A")
@@ -210,7 +210,7 @@ def test_report_with_demographics():
     # Now we are changing the rounding to the 1st of the month, therefore the patient with nhs number
     # 84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A should have an age of 35 as the
     # patient was born on 1st Oct 1982 and had an event on 5th Oct 2018.
-    demographic_data = DemographicDataset(DEMOGRAPHIC_MAPPING_FILE, DEMOGRAPHIC_FILE)
+    demographic_data = DemographicDataset(path_to_mapping_file=DEMOGRAPHIC_MAPPING_FILE, path_to_demographic_file=DEMOGRAPHIC_FILE)
     demographic_data.process_dataset(MAPPING_CONFIG, round_to_day_in_month=1)
 
     report = PhenotypeReport("Disease A")

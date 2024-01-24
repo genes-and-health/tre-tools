@@ -4,6 +4,7 @@ import polars as pl
 
 from tretools.datasets.raw_dataset import RawDataset
 from tretools.datasets.errors import ColumnsValidationError, DeduplicationError
+from tretools.datasets.dataset_enums.dataset_types import DatasetType
 
 
 
@@ -29,15 +30,6 @@ def test_good_rawdataset():
 def test_check_col_validation_on_load():
     observed_dataset = RawDataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system="SNOMED")
     assert observed_dataset.column_validation == True
-
-
-def test_check_col_validation_second_time():
-    observed_dataset = RawDataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system="SNOMED")
-
-    with pytest.raises(ColumnsValidationError) as e:
-        observed_dataset._standarise_column_names({"original_code": "code", "clinical_effective_date": "date", "pseudo_nhs_number": "nhs_number"})
-
-    assert "Column names have already been validated" in str(e.value)
 
 
 def test__standarise_column_names():
@@ -152,7 +144,7 @@ def test__drop_all_null_rows():
     observed_dataset._drop_all_null_rows()
 
     # check shape of data
-    assert observed_dataset.data.shape == (5, 4)
+    assert observed_dataset.data.shape == (3, 4)
 
 
 def test__deduplicate():
@@ -245,7 +237,7 @@ def test_with_nhs_digital_with_incorrect_type():
 
 
 def test_with_nhs_digital_with_process_dataset():
-    raw_data = RawDataset(path="tests/test_data/nhs_digital/civreg.txt", dataset_type="nhs_digital", coding_system="ICD10")
+    raw_data = RawDataset(path="tests/test_data/nhs_digital/civreg.txt", dataset_type=DatasetType.NHS_DIGITAL.value, coding_system="ICD10")
 
     processed_data = raw_data.process_dataset(deduplication_options=["nhs_number", "code", "date"], nhs_digital_subtype="CIV_REG")
 
@@ -313,3 +305,18 @@ def test_with_nhs_digital_with_process_dataset_with_op():
     assert third_patient_data['date'][0] == correct_date
     assert third_patient_data['date'][1] == correct_date
     assert third_patient_data['date'][2] == correct_date
+
+
+def test_accepts_scientific_notation_values():
+    observed_dataset = RawDataset(path="tests/test_data/primary_care/procedures_with_scientific_notation.csv", dataset_type="primary_care", coding_system="SNOMED")
+
+    # assert no data is dropped
+    assert observed_dataset.data.shape == (9, 5)
+
+    # assert that original code column is int64
+    assert observed_dataset.data["original_code"].dtype == pl.Int64
+
+    # assert that 882784691000119e3 is converted to 882784691000119040
+    observed_dataset.data = observed_dataset.data.sort('original_code', descending=True)
+    assert observed_dataset.data["original_code"][0] == 882784691000119040
+

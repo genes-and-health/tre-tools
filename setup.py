@@ -9,7 +9,7 @@ setup(
     name="tretools",
     version=version,
     packages=find_namespace_packages(exclude=["tests"]),
-    include_package_data=False,
+    include_package_data=True,
     url="https://github.com/genes-and-health/tre-tools",
     description="Tools for working with the Genes and Health Trusted Research Environment",
     author="Caroline Morton",

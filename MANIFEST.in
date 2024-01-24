@@ -1,0 +1,3 @@
+include tretools/datasets/configs/NHS_D/apc.json
+include tretools/datasets/configs/NHS_D/op.json
+include tretools/datasets/configs/NHS_D/civ_reg.json

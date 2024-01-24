@@ -9,3 +9,4 @@ class DatasetType(Enum):
     BARTS_HEALTH = "barts_health"
     NHS_DIGITAL = "nhs_digital"
     BRADFORD = "bradford"
+    MERGED = "merged"
