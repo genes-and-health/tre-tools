@@ -1,5 +1,6 @@
 import polars as pl
 import json
+import pkg_resources
 
 from datetime import datetime
 from typing import List, Dict
@@ -30,11 +31,14 @@ class RawDataset(Dataset):
         # if not, check default config
         if config_path is None:
             if hes_subtype == "CIV_REG":
-                config_path = "tretools/datasets/configs/NHS_D/civ_reg.json"
+                resource_path = "configs/NHS_D/civ_reg.json"
             elif hes_subtype == "APC":
-                config_path = "tretools/datasets/configs/NHS_D/apc.json"
+                resource_path = "configs/NHS_D/apc.json"
             elif hes_subtype == "OP":
-                config_path = "tretools/datasets/configs/NHS_D/op.json"
+                resource_path = "configs/NHS_D/op.json"
+            # this loads the default config from the package files. We get these 
+            # from the tretools package, which is installed in the environment
+            config_path = pkg_resources.resource_filename(__name__, resource_path)
         config = json.loads(open(config_path).read())
 
         # log the shape of the data
