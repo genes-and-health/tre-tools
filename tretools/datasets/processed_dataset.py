@@ -122,4 +122,36 @@ class ProcessedDataset(Dataset):
 
         return processed_dataset
 
-    
+    def truncate_icd_to_3_digits(self) -> ProcessedDataset:
+        """
+        Truncates the icd codes to 3 digits.
+
+        Returns:
+            ProcessedDataset: A new dataset containing the truncated data.
+        """
+        # Check the coding system is icd
+        if self.coding_system != CodelistType.ICD10.value:
+            raise CodeNotMappable("Coding system must be ICD10 for truncating to 3 digits")
+
+        # Add to the log
+        new_log = []
+        new_log.append(f"{datetime.now()}: Truncating ICD codes to 3 digits")
+        new_log.append(f"{datetime.now()}: Pre-truncation dataset has {self.data.shape[0]} rows")
+
+        # Truncate the icd codes
+        truncated_data = self.data.select([pl.col("nhs_number"), pl.col("date"), pl.col("code").str.slice(0, 3).alias("code")])
+        new_log.append(f"{datetime.now()}: Post-truncation dataset has {truncated_data.shape[0]} rows")
+
+        # Create a new ProcessedDataset instance and return
+        processed_dataset = ProcessedDataset(path=self.path, dataset_type=self.dataset_type, coding_system=self.coding_system)
+        processed_dataset.data = truncated_data
+
+        # Add the new log to the processed dataset together with the old log
+        for log in new_log:
+            processed_dataset.log.append(log)
+
+        for log in self.log:
+            processed_dataset.log.append(log)
+        processed_dataset.log.sort()
+
+        return processed_dataset

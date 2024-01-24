@@ -126,3 +126,35 @@ def test_mapped_to_icd_logs():
     assert "Loading mapping file from tests/test_data/mapping_files/snomed_icd_map.csv" in mapped_dataset.log[7]
     assert "Pre-mapping dataset has 7 rows" in mapped_dataset.log[8]
     assert "Post-mapping dataset has 4 rows" in mapped_dataset.log[9]
+
+
+def test_truncate_icd_to_3_digits():
+    observed_dataset = ProcessedDataset(path="tests/test_data/barts_health/diagnosis.csv", dataset_type="secondary_care", coding_system=CodelistType.ICD10.value)
+    truncated_dataset = observed_dataset.truncate_icd_to_3_digits()
+
+    # there are 10 rows in the original dataset. there should be 10 rows in the truncated dataset
+    assert truncated_dataset.data.shape == (10, 3)
+
+    # first patient. There are 2 codes with A01 (A01 and A01X). The truncated dataset should only have A01
+    first_patient = truncated_dataset.data.filter(truncated_dataset.data["nhs_number"].eq("84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"))
+    first_patient = first_patient.sort(pl.col("date"), pl.col("code"))
+
+    assert first_patient['code'][0] == "A01"
+    assert first_patient['code'][1] == "A01"
+
+
+def test_truncate_icd_to_3_digits_logs():
+    observed_dataset = ProcessedDataset(path="tests/test_data/barts_health/diagnosis.csv", dataset_type="secondary_care", coding_system=CodelistType.ICD10.value, log_path="tests/test_data/barts_health/diagnosis_log.txt")
+    truncated_dataset = observed_dataset.truncate_icd_to_3_digits()
+
+    # there are 7 logs in the original dataset, and 3 created by the truncation function
+    assert len(truncated_dataset.log) == 10
+    assert "Post-truncation dataset has 10 rows" in truncated_dataset.log[9]
+
+
+def test_truncate_icd_to_3_digits_wrong_coding_system():
+    with pytest.raises(CodeNotMappable) as e:
+        observed_dataset = ProcessedDataset(path="tests/test_data/primary_care/processed_data.csv", dataset_type="primary_care", coding_system=CodelistType.SNOMED.value)
+        observed_dataset.truncate_icd_to_3_digits()
+
+    assert "Coding system must be ICD10 for truncating to 3 digits" in str(e.value)
