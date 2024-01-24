@@ -33,8 +33,9 @@ def test_processed_log():
     ingested_data = Dataset(path="tests/test_data/primary_care/procedures_many_diffs.csv", dataset_type="primary_care", coding_system="SNOMED")
     ingested_data.log.append("test log")
 
-    assert ingested_data.log == ["test log"]
-    assert len(ingested_data.log) == 1
+    assert "Loaded data from tests/test_data/primary_care/procedures_many_diffs.csv using separator ',' with these values as null:" in ingested_data.log[0]
+    assert ingested_data.log[1] == "test log"
+    assert len(ingested_data.log) == 2
 
 
 def test_log_gets_written():
@@ -51,7 +52,7 @@ def test_log_gets_written():
 
     # check first line and how many lines in the log - should be 7 (6 logs and empty line)
     assert "first test log" in log
-    assert len(log.split("\n")) == 3
+    assert len(log.split("\n")) == 4
 
     # write the log again but this time append
     ingested_data.write_to_log("tests/test_data/primary_care/test_log.txt", overwrite_or_append="append")
@@ -60,7 +61,7 @@ def test_log_gets_written():
     with open("tests/test_data/primary_care/test_log.txt", "r") as f:
         log = f.read()
     
-    assert len(log.split("\n")) == 5
+    assert len(log.split("\n")) == 7
 
     # delete the log file
     os.remove("tests/test_data/primary_care/test_log.txt")
