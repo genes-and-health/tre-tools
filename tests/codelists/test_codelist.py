@@ -112,9 +112,9 @@ def test_bad_opcs_wrong_format():
     validation_check = Codelist.validate_opcs_code("A010.1")
     assert validation_check == False
 
-    # Fourth character is a dot if present
-    validation_check = Codelist.validate_opcs_code("A01A")
-    assert validation_check == False
+    # Fourth character is a dot or a number if present
+    validation_check = Codelist.validate_opcs_code("A011")
+    assert validation_check == True
 
     # Do not need a dot
     validation_check = Codelist.validate_opcs_code("A01")

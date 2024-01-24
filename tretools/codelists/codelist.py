@@ -185,12 +185,10 @@ class Codelist:
         - The code must be 3-5 characters long
         - The first character must be a letter
         - The second and third characters must be numbers
-        - The fourth character if present is a dot
-        - The fifth character if present is a number
-        - The fifth character must be present if the fourth character is a dot
+        - If there is a fourth character and it is a dot, there must be a number after the dot
+        - The fifth character, if present, is a number
         """
-        pattern = re.compile(r"^[A-Z]\d{2}(\.\d{1,2})?$")
-
+        pattern = re.compile(r"^[A-Z]\d{2}(\.\d{1,2}|\d{1,2})?$")
         if len(code) > 5:
             return False
 
