@@ -12,8 +12,17 @@ from tretools.datasets.demographic_dataset import DemographicDataset
 
 
 def categorise_age(age):
+    """
+    Categorises the age into age ranges from ONS.
+
+    Args:
+        age: The age to categorise.
+
+    Returns:
+        str: The age range.
+    """
     if age < 18:
-        raise ValueError("Age is less than 18")
+        return "<18"
     if age < 25:
         return "18-24"
     elif age < 35:
@@ -118,39 +127,17 @@ class EventCounter:
             ((pl.col("date") - pl.col("dob")).dt.days() / 365.25).cast(int).alias("age_at_event")
         )
 
-        # Apply categorization and mapping
-        first_events = first_events.with_columns([
-            first_events["age_at_event"].apply(categorise_age).alias("age_range"),
-            first_events["gender"].apply(lambda x: gender_map[x]).alias("gender_label")
-        ])
+        # Apply categorization and mapping - we only do this if we have any rows in the dataset
+        if first_events.shape[0] > 0:
+            first_events = first_events.with_columns([
+                first_events["age_at_event"].apply(categorise_age).alias("age_range"),
+                first_events["gender"].apply(lambda x: gender_map[x]).alias("gender_label")
+            ])
 
-        # select the columns we want (nhs_number, code, date, age at event, gender_label)
-        first_events = first_events.select(["nhs_number", "code", "date", "age_at_event", "gender_label"])
-        # Rename gender_label as gender
-        first_events = first_events.rename({"gender_label": "gender"})
+            # select the columns we want (nhs_number, code, date, age at event, gender_label)
+            first_events = first_events.select(["nhs_number", "code", "date", "age_at_event", "gender_label"])
+            # Rename gender_label as gender
+            first_events = first_events.rename({"gender_label": "gender"})
 
-        self.log.append(f"{datetime.now()}: Demographic data added to the report")
+            self.log.append(f"{datetime.now()}: Demographic data added to the report")
         return first_events
-
-
-# count of how many events per year and then drop the year column
-#         first_events = first_events.with_columns([
-#             first_events["date"].str.slice(0, 4).alias("year_of_event"),
-#         ])
-#         year_of_event = first_events.groupby("year_of_event").agg(pl.count())
-#         first_events = first_events.drop("year_of_event")
-
-
-
-        # # Group by age range and gender, then count
-        # result = first_events.groupby(["age_range", "gender_label"]).agg(pl.count())
-        #
-        # # Drop the dempgraphic columns from the nhs_numbers DataFrame as we are only interested in the counts
-        # # and wherever possible want to make it less easy to identify individuals
-        # first_events = first_events.select(["nhs_number", "code", "date"])
-        #
-        # # Convert the result to the desired dictionary format
-        # result_dict = {age_range: {} for age_range in result["age_range"].unique()}
-        # for row in result.rows():
-        #     age_range, gender, count = row
-        #     result_dict[age_range][gender] = count

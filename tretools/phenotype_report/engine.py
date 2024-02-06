@@ -1,13 +1,14 @@
 import csv
 import os
 from typing import Dict, Optional, List
-from datetime import datetime
+
 
 from tretools.datasets.processed_dataset import ProcessedDataset
 from tretools.codelists.codelist import Codelist
 from tretools.codelists.codelist_types import CodelistType
 from tretools.phenotype_report.report import PhenotypeReport
 from tretools.phenotype_report.errors import FileNotFoundError
+from tretools.datasets.demographic_dataset import DemographicDataset
 
 
 # Singleton design pattern
@@ -88,14 +89,51 @@ class PhenotypeReportEngine():
 
         return reports
 
-    def _generate_phenotype_report(self, instructions: Dict[str, Dict[str, str]], phenotype_name: str, reports_folder_path: Optional[str] = None, overlaps: bool = True) -> PhenotypeReport:
+    def _generate_phenotype_report(self, instructions: Dict[str, Dict[str, str]],
+                                   phenotype_name: str,
+                                   reports_folder_path: Optional[str] = None,
+                                   overlaps: bool = True,
+                                   demographics: Optional[DemographicDataset] = None) -> PhenotypeReport:
+        """
+        Generates a report for a phenotype.
+
+        Args:
+            instructions: A dictionary of instructions for the phenotype where the key is the name of the count
+                and the value is a dictionary of instructions.
+            phenotype_name: The name of the phenotype.
+            reports_folder_path: Path to save the reports to.
+            overlaps: If True, report overlaps.
+            demographics: If not None, add demographics to the report. Defaults to None.
+
+        Returns:
+            PhenotypeReport: The report.
+        """
         report = PhenotypeReport(phenotype_name)
 
-        for name, phenotype_instructions in instructions.items():
-            # load the dataset either from the path or from self.datasets if already present
-            dataset = self._load_dataset(phenotype_instructions['dataset_name'], phenotype_instructions['dataset_path'], phenotype_instructions['dataset_type'], phenotype_instructions['codelist_type'])
-            codelist = self._load_codelist(phenotype_instructions['codelist_name'], phenotype_instructions['codelist_path'], phenotype_instructions['codelist_type'], phenotype_instructions['with_x_in_icd'])
-            report.add_count(name, dataset=dataset, codelist=codelist)
+        if demographics is not None:
+            for name, phenotype_instructions in instructions.items():
+                # load the dataset either from the path or from self.datasets if already present
+                dataset = self._load_dataset(phenotype_instructions['dataset_name'],
+                                             phenotype_instructions['dataset_path'],
+                                             phenotype_instructions['dataset_type'],
+                                             phenotype_instructions['codelist_type'])
+                codelist = self._load_codelist(phenotype_instructions['codelist_name'],
+                                               phenotype_instructions['codelist_path'],
+                                               phenotype_instructions['codelist_type'],
+                                               phenotype_instructions['with_x_in_icd'])
+                report.add_count(name, dataset=dataset, codelist=codelist, demographics=demographics)
+        else:
+            for name, phenotype_instructions in instructions.items():
+                # load the dataset either from the path or from self.datasets if already present
+                dataset = self._load_dataset(phenotype_instructions['dataset_name'],
+                                             phenotype_instructions['dataset_path'],
+                                             phenotype_instructions['dataset_type'],
+                                             phenotype_instructions['codelist_type'])
+                codelist = self._load_codelist(phenotype_instructions['codelist_name'],
+                                               phenotype_instructions['codelist_path'],
+                                               phenotype_instructions['codelist_type'],
+                                               phenotype_instructions['with_x_in_icd'])
+                report.add_count(name, dataset=dataset, codelist=codelist)
 
         if overlaps:
             report.report_overlaps()
