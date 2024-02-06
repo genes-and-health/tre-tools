@@ -46,10 +46,6 @@ class PhenotypeReport():
         counter = EventCounter(dataset)
         counter.count_events(name_of_count=name_of_count, codelist=codelist, demographics=demographics)
 
-        # # if demographics are provided, add them to the report
-        # if demographics is not None:
-        #     self.add_demographic_data(counter, demographics)
-
         self.counts[name_of_count] = counter.counts[name_of_count]
 
         self.logs.append(f"Codelist {name_of_count} added to report {self.name} at {datetime.now()}. Log below from this count to follow.")
