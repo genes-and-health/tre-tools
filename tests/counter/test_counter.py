@@ -66,6 +66,4 @@ def test_categorise_age():
     assert categorise_age(70) == "65-74"
     assert categorise_age(80) == "75-84"
     assert categorise_age(90) == "85+"
-
-    with pytest.raises(ValueError) as e:
-        categorise_age(10)
+    assert categorise_age(10) == "<18"
