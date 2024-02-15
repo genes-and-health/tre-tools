@@ -125,6 +125,11 @@ def test_process_custom_codelist():
         assert data[0] == ['code', 'term']
         assert data[1] == ['K123', 'Procedure']
 
+    icd10_file = os.path.join(output_directory, 'customs_ICD10.csv')
+    # clean up
+    os.remove(snomed_file)
+    os.remove(opcs4_file)
+    os.remove(icd10_file)
 
 def test_process_codelists_to_reference_files():
     input_file = 'tests/utils/snomed.csv'

@@ -3,7 +3,7 @@ import os
 
 from tretools.phenotype_report.engine import PhenotypeReportEngine
 from tretools.phenotype_report.engine import FileNotFoundError
-
+from tretools.datasets.demographic_dataset import DemographicDataset
 
 TEST_INSTRUCTION_PRIMARY_CARE = {'phenotype_name': 'Disease A', 'dataset_name': 'primary_care', 'dataset_path': 'tests/test_data/primary_care/processed_data.csv', 'dataset_type': 'primary_care', 'codelist_name': 'Disease_A_snomed', 'codelist_path': 'tests/codelists/test_data/good_snomed_codelist.csv', 'codelist_type': 'SNOMED', 'with_x_in_icd': ''}
 TEST_INSTRUCTION_SECONDARY_CARE = {'phenotype_name': 'Disease A', 'dataset_name': 'barts_health', 'dataset_path': 'tests/test_data/barts_health/diagnosis.csv', 'dataset_type': 'barts_health', 'codelist_name': 'Disease_A_ICD10', 'codelist_path': 'tests/codelists/test_data/good_icd_codelist.csv', 'codelist_type': 'ICD10', 'with_x_in_icd': 'no'}
@@ -64,6 +64,22 @@ def test__generate_phenotype_report():
     assert phenotype_report.counts['barts_health_Disease_A_ICD10']['patient_count'] == 2
     assert phenotype_report.counts['barts_health_Disease_A_ICD10']['event_count'] == 2
 
+
+def test__generate_phenotype_report_with_demographics():
+    engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
+    engine.organise_into_phenotypes()
+
+    demographics = DemographicDataset("tests/test_data/demographics/processed.arrow")
+
+    phenotype_report = engine._generate_phenotype_report(engine.processed_instructions['Disease A'],
+                                                         "Disease A",
+                                                         overlaps=False,
+                                                         demographics=demographics)
+    assert engine.datasets['primary_care'].data.shape == (7, 3)
+    assert engine.datasets['barts_health'].data.shape == (10, 4)
+
+    expected_keys = ["primary_care_Disease_A_snomed", "barts_health_Disease_A_ICD10"]
+    assert set(phenotype_report.counts.keys()) == set(expected_keys)
 
 
 def test__generate_phenotype_report_with_overlaps():
