@@ -35,10 +35,6 @@ def test__check_all_codelist_reachable():
     assert "Codelist file FAKE PATH not found." in str(e.value)
 
 
-# def test__load_codelist_with_variable_args():
-#     engine = PhenotypeReportEngine("tests/phenotype_report/test_full_index_different_x_args.csv")
-#
-#     assert False
 
 def test_orgainse_into_phenotypes():
     engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
@@ -140,3 +136,43 @@ def test_generate_reports():
     assert reports['Disease B'].counts['barts_health_Disease_B_ICD10']['patient_count'] == 2
     assert reports['Disease B'].counts['barts_health_Disease_B_ICD10']['event_count'] == 3
 
+
+def test__load_codelist():
+    engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
+    engine.organise_into_phenotypes()
+
+    codelist = engine._load_codelist(codelist_name="Disease_A_snomed",
+                                     codelist_path="tests/codelists/test_data/good_snomed_codelist.csv",
+                                     codelist_type="SNOMED",
+                                     add_x_codes="no")
+    assert len(codelist.data) == 2
+    assert codelist.data[0] == {'code': '100000001', 'term': 'Disease A - 1'}
+    assert codelist.data[1] == {'code': '100000002', 'term': 'Disease A - 2'}
+
+def test__load_codelist_without_x():
+    engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
+    engine.organise_into_phenotypes()
+
+    codelist = engine._load_codelist(codelist_name="Disease_A_ICD10",
+                                        codelist_path="tests/codelists/test_data/good_icd_codelist.csv",
+                                        codelist_type="ICD10",
+                                        add_x_codes="no")
+    assert len(codelist.data) == 2
+
+    assert codelist.data[0] == {'code': 'A01', 'term': 'Disease A - 1'}
+    assert codelist.data[1] == {'code': 'A02', 'term': 'Disease A - 2'}
+
+
+def test__load_codelist_with_x():
+    engine = PhenotypeReportEngine("tests/phenotype_report/test_index.csv")
+    engine.organise_into_phenotypes()
+
+    codelist = engine._load_codelist(codelist_name="Disease_A_ICD10",
+                                        codelist_path="tests/codelists/test_data/good_icd_codelist.csv",
+                                        codelist_type="ICD10",
+                                        add_x_codes="yes")
+    assert len(codelist.data) == 4
+    assert codelist.data[0] == {'code': 'A01', 'term': 'Disease A - 1'}
+    assert codelist.data[1] == {'code': 'A01X', 'term': 'Disease A - 1'}
+    assert codelist.data[2] == {'code': 'A02', 'term': 'Disease A - 2'}
+    assert codelist.data[3] == {'code': 'A02X', 'term': 'Disease A - 2'}
