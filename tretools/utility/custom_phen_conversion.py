@@ -10,19 +10,33 @@ import polars as pl
 from tretools.utility.errors import CustomPhenotypeError
 
 
-def process_all_codelists(rows, output_directory, config):
-    '''
-    This function formats all three codelists (SNOMED, OPCS4, and ICD10) to be used as inputs for a custom package
-    '''
+def process_all_codelists(rows, output_directory, config) -> None:
+    """
+    This function processes one large custom phenotype file and separates it into three separate CSV files,
+    for each of the "types" of codelists (ICD10, SNOMED, OPCS4).
+
+    Args:
+        rows: A list of dictionaries, where each dictionary represents a row in the original custom phenotype file
+        output_directory: The directory to save the generated separate CSV files
+        config: A dictionary containing the column names for the custom codelist file
+
+    Raises:
+        CustomPhenotypeError: If the sum of counts from three separate files (SNOMED, ICD10, OPCS4) is not
+            equal to the number of rows in the original customs file
+
+    Returns:
+        None
+    """
     total_generated_records = 0  # A variable to track the total length of the generated separate CSV files
 
+    # Loop through the rows and separate them into three separate CSV files
     for codelist_type in [config['ICD10_col_name'], config['SNOMED_col_name'], config['OPCS4_col_name']]:
         filtered_rows = [row for row in rows if row[config['code_col_name']] == codelist_type]
         total_generated_records += len(filtered_rows)
 
-    # Check if the sum of counts from three separate files (SNOMED, ICD10, OPCS4) is equal to the number of rows in the original customs file
-    original_length = len(rows) 
-
+    # Check if the sum of counts from three separate files (SNOMED, ICD10, OPCS4) is equal to the number
+    # of rows in the original customs file, and raise an error if not,
+    original_length = len(rows)
     if total_generated_records != original_length:
         raise CustomPhenotypeError(
             f"Error: Original custom phenotype file has {original_length} records, "
@@ -30,7 +44,8 @@ def process_all_codelists(rows, output_directory, config):
             f"This may indicate that there is a codelist type in the original file that is not any of ICD10, SNOMED, or OPCS4. Alternatively, typos should be checked"
         )
 
-    # If the lengths are equal, write the CSV files
+    # If the lengths are equal, write the CSV files by filtering the rows, and looping
+    # through the codelist types
     for codelist_type in [config['ICD10_col_name'], config['SNOMED_col_name'], config['OPCS4_col_name']]:
         filtered_rows = [row for row in rows if row[config['code_col_name']] == codelist_type]
         header = ['code', 'term']
@@ -41,7 +56,7 @@ def process_all_codelists(rows, output_directory, config):
             writer.writeheader()
             writer.writerows([{'code': row['code'], 'term': row['phenotype']} for row in filtered_rows])
 
-def process_custom_codelist(input_file, output_directory, config):
+def process_custom_codelist(input_file, output_directory, config) -> None:
     '''
     The main function reads the custom codelists original file
 
@@ -75,11 +90,11 @@ def process_codelists_to_reference_files(input_file: str,
     writes a separate CSV file to be used as a reference file.
 
     Args:
-        input_file:
-        output_directory:
-        reference_file_path:
-        dataset_config:
-        codelist_config:
+        input_file: The path to the original custom codelist file
+        output_directory: The directory to save the generated separate CSV files
+        reference_file_path: The path to the reference file
+        dataset_config: A dictionary containing the dataset configuration
+        codelist_config: A dictionary containing the codelist configuration
 
     Returns:
         None
