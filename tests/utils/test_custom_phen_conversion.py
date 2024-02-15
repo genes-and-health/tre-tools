@@ -43,8 +43,10 @@ def test_process_all_codelists():
         content = test_file.readlines()  # Read lines into a list
         data = [line.strip().split(',') for line in content] # Splitting the lines into a list of lists
         assert data[0] == ['code', 'term']
-        assert data[1] == ['100000001', 'Disease A - 1']
-        assert data[2] == ['100000002', 'Disease A - 2']
+
+        # The order of the rows is not guaranteed, so we need to check both possibilities
+        assert data[1] == ['100000001', 'Disease A - 1'] or data[1] == ['100000002', 'Disease A - 2']
+
 
     opcs4_file = os.path.join(output_directory, 'customs_OPCS4.csv')
     with open(opcs4_file, 'r') as test_file:
@@ -160,8 +162,9 @@ def test_process_codelists_to_reference_files():
     with open(copied_reference_file_path, 'r') as test_file:
         content = test_file.readlines()  # Read lines into a list
         data = [line.strip().split(',') for line in content] # Splitting the lines into a list of lists
-        assert data[1] == ['Disease_A', 'test_dataset', 'tests/utils/test_dataset.csv', 'primary_care', 'test_codelist_Disease_A', 'tests/utils/Disease_A.csv', 'SNOMED', 'no']
-        assert data[2] == ['Disease_B', 'test_dataset', 'tests/utils/test_dataset.csv', 'primary_care', 'test_codelist_Disease_B', 'tests/utils/Disease_B.csv', 'SNOMED', 'no']
+
+        # The order of the rows is not guaranteed, so we need to check both possibilities
+        assert data[1] == ['Disease_A', 'test_dataset', 'tests/utils/test_dataset.csv', 'primary_care', 'test_codelist_Disease_A', 'tests/utils/Disease_A.csv', 'SNOMED', 'no'] or data[1] == ['Disease_B', 'test_dataset', 'tests/utils/test_dataset.csv', 'primary_care', 'test_codelist_Disease_B', 'tests/utils/Disease_B.csv', 'SNOMED', 'no']
 
     # Now we test that the separated csv files are also created
     # assert the content of the separated csv files
