@@ -73,7 +73,7 @@ class PhenotypeReportEngine():
 
         self.processed_instructions = phenotypes
 
-    def generate_reports(self, reports_folder_path: Optional[str] = None, overlaps: bool = True) -> List[PhenotypeReport]:
+    def generate_reports(self, reports_folder_path: Optional[str] = None, overlaps: bool = True, demographics: Optional[DemographicDataset] = None) -> List[PhenotypeReport]:
         """
         Loops through the instructions and generates a report for each phenotype.
 
@@ -84,7 +84,7 @@ class PhenotypeReportEngine():
         reports = {}
 
         for phenotype_name, instructions in self.processed_instructions.items():
-            report = self._generate_phenotype_report(instructions, phenotype_name, reports_folder_path, overlaps)
+            report = self._generate_phenotype_report(instructions, phenotype_name, reports_folder_path, overlaps, demographics)
             reports[phenotype_name] = report
 
         return reports
