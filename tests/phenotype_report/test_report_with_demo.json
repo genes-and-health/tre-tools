@@ -1,0 +1,113 @@
+{
+    "name": "Disease A",
+    "counts": {
+        "test_count_primary_care": {
+            "code": [
+                100000001,
+                100000002
+            ],
+            "patient_count": 2,
+            "event_count": 4,
+            "nhs_numbers": [
+                {
+                    "nhs_number": "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A",
+                    "code": 100000001,
+                    "date": "2018-10-05",
+                    "age_at_event": 34,
+                    "gender": "F"
+                },
+                {
+                    "nhs_number": "73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B",
+                    "code": 100000001,
+                    "date": "2013-06-03",
+                    "age_at_event": 34,
+                    "gender": "M"
+                }
+            ],
+            "codelist_path": "tests/codelists/test_data/good_snomed_codelist.csv",
+            "codelist_type": "SNOMED",
+            "dataset_type": "primary_care",
+            "log": [
+                "2024-02-15 15:06:52.770276: There are 7 events in the dataset",
+                "2024-02-15 15:06:52.770289: Counting events for codelist test_count_primary_care",
+                "2024-02-15 15:06:52.773712: There are 4 events in the dataset for the codelist",
+                "2024-02-15 15:06:52.776567: There are 2 people in the dataset for the codelist",
+                "2024-02-15 15:06:52.784263: Demographic data added to the report"
+            ],
+            "dataset_log": [
+                "2024-02-15 15:06:52.744517: Loaded data from tests/test_data/primary_care/processed_data.csv using separator ',' with these values as null: ['', ' ', 'NULL', 'NA', '               ', '.', '                    ', '-', 'NOT CLOSE']"
+            ]
+        },
+        "test_secondary_care": {
+            "code": [
+                "A02",
+                "A01"
+            ],
+            "patient_count": 2,
+            "event_count": 2,
+            "nhs_numbers": [
+                {
+                    "nhs_number": "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A",
+                    "code": "A01",
+                    "date": "2012-12-13",
+                    "age_at_event": 29,
+                    "gender": "F"
+                },
+                {
+                    "nhs_number": "53952EF0503F7F341D9121DBCCC39DE95EA83713167E5E57EDB613A60D4C104C",
+                    "code": "A01",
+                    "date": "2012-12-13",
+                    "age_at_event": 64,
+                    "gender": "M"
+                }
+            ],
+            "codelist_path": "tests/codelists/test_data/good_icd_codelist.csv",
+            "codelist_type": "ICD10",
+            "dataset_type": "barts_health",
+            "log": [
+                "2024-02-15 15:06:52.784276: There are 10 events in the dataset",
+                "2024-02-15 15:06:52.784278: Counting events for codelist test_secondary_care",
+                "2024-02-15 15:06:52.785323: There are 2 events in the dataset for the codelist",
+                "2024-02-15 15:06:52.785630: There are 2 people in the dataset for the codelist",
+                "2024-02-15 15:06:52.786447: Demographic data added to the report"
+            ],
+            "dataset_log": [
+                "2024-02-15 15:06:52.745675: Loaded data from tests/test_data/barts_health/diagnosis.csv using separator ',' with these values as null: ['', ' ', 'NULL', 'NA', '               ', '.', '                    ', '-', 'NOT CLOSE']"
+            ]
+        }
+    },
+    "logs": [
+        "Codelist test_count_primary_care added to report Disease A at 2024-02-15 15:06:52.784272. Log below from this count to follow.",
+        [
+            "2024-02-15 15:06:52.770276: There are 7 events in the dataset",
+            "2024-02-15 15:06:52.770289: Counting events for codelist test_count_primary_care",
+            "2024-02-15 15:06:52.773712: There are 4 events in the dataset for the codelist",
+            "2024-02-15 15:06:52.776567: There are 2 people in the dataset for the codelist",
+            "2024-02-15 15:06:52.784263: Demographic data added to the report"
+        ],
+        "Codelist test_secondary_care added to report Disease A at 2024-02-15 15:06:52.786453. Log below from this count to follow.",
+        [
+            "2024-02-15 15:06:52.784276: There are 10 events in the dataset",
+            "2024-02-15 15:06:52.784278: Counting events for codelist test_secondary_care",
+            "2024-02-15 15:06:52.785323: There are 2 events in the dataset for the codelist",
+            "2024-02-15 15:06:52.785630: There are 2 people in the dataset for the codelist",
+            "2024-02-15 15:06:52.786447: Demographic data added to the report"
+        ],
+        "2024-02-15 15:06:52.786764: Identified overlaps and unique NHS numbers for datasets.",
+        "2024-02-15 15:06:52.788235: Report saved to tests/phenotype_report/test_report_with_demo.json"
+    ],
+    "overlaps": {
+        "test_count_primary_care_only": [
+            "73951AB0712D6E241E8222EDCCF28AE86DA72814078D6F48ECE512C91B5B104B"
+        ],
+        "test_secondary_care_only": [
+            "53952EF0503F7F341D9121DBCCC39DE95EA83713167E5E57EDB613A60D4C104C"
+        ],
+        "test_count_primary_care_and_test_secondary_care": [
+            "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+        ],
+        "all_datasets": [
+            "84950DE0614A5C241F7223FBCCD27BE87DB61915972C7E49EDF519B72A3A104A"
+        ]
+    }
+}

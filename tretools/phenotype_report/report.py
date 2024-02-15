@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-import csv
 import os
+import datetime as dt
 from datetime import datetime
 from itertools import combinations
 from typing import Optional
@@ -74,8 +74,16 @@ class PhenotypeReport():
         # DataFrame and cannot be saved to json.
         for named_count, count_detail in output["counts"].items():
             output["counts"][named_count]["nhs_numbers"] = count_detail["nhs_numbers"].to_dicts()
+            for person in output["counts"][named_count]["nhs_numbers"]:
+                # check if the date is a datetime object and convert to string if it is
+                if isinstance(person["date"], dt.date):
+                    person["date"] = person["date"].strftime("%Y-%m-%d")
 
         output["logs"] = self.logs
+
+        # if overlap
+        if self.overlaps:
+            output["overlaps"] = self.overlaps
 
         # save the report to a json file. 
         with open(path, "w") as f:

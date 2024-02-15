@@ -171,12 +171,19 @@ def test_report_with_demographics():
     snomed_codelist = Codelist(SNOMED_CODELIST, "SNOMED")
     primary_care = ProcessedDataset(PRIMARY_CARE_DATASET, "primary_care", "SNOMED")
 
+    # icd 10 and secondary care
+    # icd_codelist = Codelist(ICD_CODELIST, "ICD10")
+    # secondary_care = ProcessedDataset(SECONDARY_CARE_DATASET, "barts_health", "ICD10")
+
     # load the demographic data
     demographic_data = DemographicDataset(path_to_mapping_file=DEMOGRAPHIC_MAPPING_FILE, path_to_demographic_file=DEMOGRAPHIC_FILE)
     demographic_data.process_dataset(MAPPING_CONFIG)
     
     report = PhenotypeReport("Disease A")
     report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
+    # report.add_count("test_secondary_care", icd_codelist, secondary_care, demographics=demographic_data)
+    # report.report_overlaps()
+    # report.save_to_json("tests/phenotype_report/test_report_with_demo.json")
 
     observed_report = report.counts["test_count_primary_care"]
     assert set(observed_report['code']) == set([100000001, 100000002])
@@ -215,6 +222,7 @@ def test_report_with_demographics():
 
     report = PhenotypeReport("Disease A")
     report.add_count("test_count_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
+
     observed_report = report.counts["test_count_primary_care"]
 
     patients = observed_report["nhs_numbers"].to_dicts()
@@ -223,3 +231,4 @@ def test_report_with_demographics():
     assert patients[0]['date'] == datetime(2018, 10, 5).date()
     assert patients[0]['age_at_event'] == 35
     assert patients[0]['gender'] == "F"
+
