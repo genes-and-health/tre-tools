@@ -1,0 +1,7 @@
+code,term,phenotype
+A01.123,ICD10,Disease A - 1
+100000001,SNOMED,Disease A - 1
+100000002,SNOMED,Disease A - 2
+A01X,ICD10,Disease A - 1
+A011,ICD10,Disease A - 1
+K123,OPCS4,Procedure

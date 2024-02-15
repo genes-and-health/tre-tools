@@ -43,10 +43,12 @@ def make_phenotype_reports_for_testing():
     phenotype_report_1 = PhenotypeReport("Disease A")
     phenotype_report_1.add_count("disease_a_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
     phenotype_report_1.add_count("disease_a_secondary_care", icd_codelist, secondary_care, demographics=demographic_data)
+    phenotype_report_1.report_overlaps()
     reports.append(phenotype_report_1)
 
     phenotype_report_2 = PhenotypeReport("Disease B")
     phenotype_report_2.add_count("disease_b_primary_care", snomed_codelist, primary_care, demographics=demographic_data)
     reports.append(phenotype_report_2)
+
     return reports
 

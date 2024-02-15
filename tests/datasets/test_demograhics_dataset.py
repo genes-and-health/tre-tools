@@ -40,7 +40,6 @@ def test_demographic_dataset_process_round_to_day():
     expected_dob_as_dt = [datetime.strptime(x, "%Y-%m-%d").date() for x in expected_dob]
 
     assert data.data["dob"].to_list() == expected_dob_as_dt
-
     
 def test_cannot_process_if_already_data():
     data = DemographicDataset(path="tests/test_data/demographics/processed.csv")

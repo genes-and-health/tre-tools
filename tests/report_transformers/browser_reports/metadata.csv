@@ -1,0 +1,3 @@
+report_name,author,year_of_creation,tag,body_system,description,github_url
+Disease A,G&H phenotype taskforce,2023,MultipleAI,Endocrine System,This phenotype aims to capture instances of Disease A.,['https://github.com/example_repo/dseaseA']
+Disease B,G&H phenotype taskforce,2023,MultipleAI,Endocrine System,This phenotype aims to capture instances of Disease B.,['https://github.com/example_repo/dseaseB']
