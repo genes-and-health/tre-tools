@@ -174,21 +174,21 @@ class BrowserReportTransformer(ReportTransformer):
 
         # Nowe get rid of duplicates, and take the earliest year of event for
         # each nhs_number so we sort by year of event
-        final_df = (final_df.sort(["nhs_number", "year_of_event"]).groupby("nhs_number").first())
+        final_df = (final_df.sort(["nhs_number", "year_of_event"]).group_by("nhs_number").first())
 
         # Now we can count the number of events for each year, age and gender
         # Count occurrences per year
-        year_counts = final_df.groupby("year_of_event").agg(pl.count("year_of_event").alias("count")).to_dict(as_series=False)
+        year_counts = final_df.group_by("year_of_event").agg(pl.count("year_of_event").alias("count")).to_dict(as_series=False)
         year_of_event = {year: count for year, count in zip(year_counts["year_of_event"], year_counts["count"])}
 
         # Update age_of_event counts
-        age_counts = final_df.groupby("age_group").agg(pl.count("age_group").alias("count")).to_dict(as_series=False)
+        age_counts = final_df.group_by("age_group").agg(pl.count("age_group").alias("count")).to_dict(as_series=False)
         for age_group, count in zip(age_counts["age_group"], age_counts["count"]):
             if age_group in age_of_event:
                 age_of_event[age_group] = count
 
         # Update gender_of_event final_dfcounts
-        gender_counts = final_df.groupby("gender").agg(pl.count("gender").alias("count")).to_dict(as_series=False)
+        gender_counts = final_df.group_by("gender").agg(pl.count("gender").alias("count")).to_dict(as_series=False)
         for gender, count in zip(gender_counts["gender"], gender_counts["count"]):
             if gender in gender_of_event:
                 gender_of_event[gender] = count
