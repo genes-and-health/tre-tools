@@ -84,7 +84,7 @@ class EventCounter:
         # Sort the data by nhs_number and date, then group by nhs_number to get the first event
 
         first_events = (filtered_data.sort(["nhs_number", "date"])
-                        .group_by("nhs_number").first())
+                        .groupby("nhs_number").first())
 
         # person count
         person_count = first_events.shape[0]

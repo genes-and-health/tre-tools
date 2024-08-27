@@ -15,5 +15,5 @@ setup(
     author="Caroline Morton",
     author_email="c.morton@qmul.ac.uk",
     python_requires=">=3.8",
-    install_requires=["polars", "setuptools"],
+    install_requires=["polars == 0.19.9", "setuptools"],
 )

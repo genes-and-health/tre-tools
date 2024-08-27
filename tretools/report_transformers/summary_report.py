@@ -91,9 +91,9 @@ class SummaryReportTransformer(ReportTransformer):
             log.append(f"{datetime.now()}: Total number of events prior to filtering for first event for {phenotype.name} is {total_events}, with {len(df['nhs_number'].unique())} unique patients.")
 
             # For each nhs number get the first event and drop the rows that have a date that is not the first event
-            df = df.sort(["nhs_number", "date"]).group_by("nhs_number").first()
+            df = df.sort(["nhs_number", "date"]).groupby("nhs_number").first()
             first_events = (df.sort(["nhs_number", "date"])
-                            .group_by("nhs_number").first())
+                            .groupby("nhs_number").first())
 
             # log the number of events and unique patients after filtering for first event
             total_events = len(first_events)

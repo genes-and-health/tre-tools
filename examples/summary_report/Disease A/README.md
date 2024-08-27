@@ -2,7 +2,7 @@
 
 ## Report Generation Date and Time
 
-This report was generated on 13 December 2023.
+This report was generated on 27 August 2024.
 
 ## Report Overview
 
@@ -20,8 +20,8 @@ This report utilises the codelists below. For more information on how these were
 
 | Code |
 | --- |
-| 100000001 |
 | 100000002 |
+| 100000001 |
 
 ### ICD10 Codelist
 
@@ -29,8 +29,8 @@ This report utilises the codelists below. For more information on how these were
 
 | Code |
 | --- |
-| A021 |
 | A01 |
+| A021 |
 
 ## Datasets
 
@@ -52,13 +52,13 @@ In the interest of transparency, the logs for the pre-processing of each dataset
 
 | Date | Message |
 | --- | --- |
-| 2023-12-13 23:36:02 | Loaded data from Datasets/primary_care_data.csv |
-| 2023-12-13 23:37:01 | Column names not validated |
-| 2023-12-13 23:37:01 | Key columns are standardised, however extra columns found: extra_col. Run _drop_unneeded_columns() to drop these columns. |
-| 2023-12-13 23:37:01 | Unneeded 2 column(s) dropped |
-| 2023-12-13 23:37:01 | Dropped 6 rows with empty values or empty date strings |
-| 2023-12-13 23:37:01 | Date format standarised |
-| 2023-12-13 23:37:01 | Deduplicated data based on: nhs_number, code, date |
+| 2024-08-27 22:02:53 | Loaded data from datasets/primary_care_data.csv using separator ',' with these values as null: ['', ' ', 'NULL', 'NA', '               ', '.', '                    ', '-', 'NOT CLOSE'] |
+| 2024-08-27 22:02:53 | Column names not validated |
+| 2024-08-27 22:02:53 | Key columns are standardised, however extra columns found: extra_col. Run _drop_unneeded_columns() to drop these columns. |
+| 2024-08-27 22:02:53 | Unneeded 2 column(s) dropped |
+| 2024-08-27 22:02:53 | Dropped 6 rows with empty values or empty date strings |
+| 2024-08-27 22:02:53 | Date format standarised |
+| 2024-08-27 22:02:53 | Deduplicated data based on: nhs_number, code, date |
 
 **Name of Dataset**: secondary_care
 
@@ -68,13 +68,13 @@ In the interest of transparency, the logs for the pre-processing of each dataset
 
 | Date | Message |
 | --- | --- |
-| 2023-12-13 23:51:30 | Loaded data from datasets/barts_diagnosis.tab |
-| 2023-12-13 23:51:30 | Column names not validated |
-| 2023-12-13 23:51:30 | Key columns are standardised, however extra columns found: ICD_Diagnosis_Num, CDS_Activity_Dt. Run _drop_unneeded_columns() to drop these columns. |
-| 2023-12-13 23:51:30 | Unneeded 3 column(s) dropped |
-| 2023-12-13 23:51:30 | Dropped 0 rows with empty values or empty date strings |
-| 2023-12-13 23:51:30 | Date format standarised |
-| 2023-12-13 23:51:30 | Deduplicated data based on: nhs_number, code, date |
+| 2024-08-27 22:02:53 | Loaded data from datasets/barts_diagnosis.tab using separator '	' with these values as null: ['', ' ', 'NULL', 'NA', '               ', '.', '                    ', '-', 'NOT CLOSE'] |
+| 2024-08-27 22:02:53 | Column names not validated |
+| 2024-08-27 22:02:53 | Key columns are standardised, however extra columns found: ICD_Diagnosis_Num, CDS_Activity_Dt. Run _drop_unneeded_columns() to drop these columns. |
+| 2024-08-27 22:02:53 | Unneeded 3 column(s) dropped |
+| 2024-08-27 22:02:53 | Dropped 0 rows with empty values or empty date strings |
+| 2024-08-27 22:02:53 | Date format standarised |
+| 2024-08-27 22:02:53 | Deduplicated data based on: nhs_number, code, date |
 
 ## Counting first events
 
@@ -90,11 +90,11 @@ The logs for counting the Codelist against each dataset are provided below. Plea
 
 | Date | Message |
 | --- | --- |
-| 2023-12-13 23:51:30 | There are 7 events in the dataset |
-| 2023-12-13 23:51:30 | Counting events for codelist primary_care |
-| 2023-12-13 23:51:30 | There are 4 events in the dataset for the codelist |
-| 2023-12-13 23:51:30 | There are 2 people in the dataset for the codelist |
-| 2023-12-13 23:51:30 | Demographic data added to the report |
+| 2024-08-27 22:02:53 | There are 7 events in the dataset |
+| 2024-08-27 22:02:53 | Counting events for codelist primary_care |
+| 2024-08-27 22:02:53 | There are 4 events in the dataset for the codelist |
+| 2024-08-27 22:02:53 | There are 2 people in the dataset for the codelist |
+| 2024-08-27 22:02:53 | Demographic data added to the report |
 
 **Name of Dataset**: secondary_care
 
@@ -104,9 +104,9 @@ The logs for counting the Codelist against each dataset are provided below. Plea
 
 | Date | Message |
 | --- | --- |
-| 2023-12-13 23:51:30 | There are 10 events in the dataset |
-| 2023-12-13 23:51:30 | Counting events for codelist secondary_care |
-| 2023-12-13 23:51:30 | There are 2 events in the dataset for the codelist |
-| 2023-12-13 23:51:30 | There are 2 people in the dataset for the codelist |
-| 2023-12-13 23:51:30 | Demographic data added to the report |
+| 2024-08-27 22:02:53 | There are 10 events in the dataset |
+| 2024-08-27 22:02:53 | Counting events for codelist secondary_care |
+| 2024-08-27 22:02:53 | There are 2 events in the dataset for the codelist |
+| 2024-08-27 22:02:53 | There are 2 people in the dataset for the codelist |
+| 2024-08-27 22:02:53 | Demographic data added to the report |
 

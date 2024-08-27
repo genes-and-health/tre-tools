@@ -104,7 +104,7 @@ def process_codelists_to_reference_files(input_file: str,
 
     # Loop through the df and save the separate CSV files, and then append the file paths
     # to the reference file
-    for term, group in df.group_by('term'):
+    for term, group in df.groupby('term'):
         # create filename
         filename = f"{output_directory}/{term}.csv"
 
