@@ -12,8 +12,8 @@ setup(
     include_package_data=True,
     url="https://github.com/genes-and-health/tre-tools",
     description="Tools for working with the Genes and Health Trusted Research Environment",
-    author="Caroline Morton",
-    author_email="c.morton@qmul.ac.uk",
+    author="Caroline Morton, Saeed Bidi",
+    author_email="c.morton@qmul.ac.uk, saeed.bidi@qmul.ac.uk",
     python_requires=">=3.8",
-    install_requires=["polars == 0.19.9", "setuptools"],
+    install_requires=["polars == 0.19.9", "setuptools", "pytest"],
 )
