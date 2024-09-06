@@ -1,4 +1,4 @@
-polars==0.19.9
+polars
 # polars
 pandas
 pytest
